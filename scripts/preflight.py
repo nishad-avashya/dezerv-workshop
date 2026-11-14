@@ -68,7 +68,7 @@ elif not want:
 print("== read access to the services the labs use")
 probes = [("cloudformation", "list_stacks", {}), ("lambda", "list_functions", {"MaxItems": 1}), ("dynamodb", "list_tables", {"Limit": 1}),
           ("cognito-idp", "list_user_pools", {"MaxResults": 1}), ("s3", "list_buckets", {}), ("logs", "describe_log_groups", {"limit": 1}),
-          ("ssm", "describe_parameters", {"MaxResults": 1}), ("iam", "list_roles", {"MaxItems": 1}),
+          ("ssm", "get_parameter", {"Name": "/dezerv/freeze"}), ("iam", "list_roles", {"MaxItems": 1}),
           ("bedrock-agentcore-control", "list_gateways", {}), ("bedrock-agentcore-control", "list_policy_engines", {}),
           ("bedrock-agentcore-control", "list_memories", {}), ("bedrock-agentcore-control", "list_agent_runtimes", {})]
 for svc, op, kw in probes:
@@ -77,6 +77,9 @@ for svc, op, kw in probes:
         say("PASS", f"{svc}:{op}")
     except Exception as e:
         c = code(e)
+        if c == "ParameterNotFound":    # the labs only get/put /dezerv/freeze (never list SSM): "not found" before bootstrap is a pass
+            say("PASS", f"{svc}:{op} (parameter does not exist yet, access is fine)")
+            continue
         hint = ("AgentCore may not be available in this region/account, or the endpoint is blocked" if isinstance(e, EndpointConnectionError) or "Endpoint" in c
                 else "the role cannot even list this service: ask for access (spike V-1)")
         say("FAIL", f"{svc}:{op} -> {c}", hint)
