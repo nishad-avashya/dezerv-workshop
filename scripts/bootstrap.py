@@ -105,9 +105,8 @@ def seed_s3(s3, bucket, data):
 def seed_tickets(ddb, data):
     t = ddb.Table("dezerv-tickets")
     tickets = json.loads((data / "jira/tickets.json").read_text())
-    with t.batch_writer() as bw:
-        for x in tickets:
-            bw.put_item(Item=x)
+    for x in tickets:       # plain PutItem: the workshop role has no dynamodb:BatchWriteItem (batch_writer() fails with AccessDenied)
+        t.put_item(Item=x)
     try:  # never reset the counter on a re-run (would re-issue ticket keys)
         t.put_item(Item={"key": "COUNTER#PAY", "n": 0}, ConditionExpression="attribute_not_exists(#k)", ExpressionAttributeNames={"#k": "key"})
     except t.meta.client.exceptions.ConditionalCheckFailedException:
