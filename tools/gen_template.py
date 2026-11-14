@@ -41,7 +41,6 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions: [{AttributeName: pk, AttributeType: S}]
       KeySchema: [{AttributeName: pk, KeyType: HASH}]
-      TimeToLiveSpecification: {AttributeName: expires_at, Enabled: true}
   FreezeParam:
     Type: AWS::SSM::Parameter
     Properties: {Name: /dezerv/freeze, Type: String, Value: "off", Description: "Change freeze: on | off | <iso-start>/<iso-end>"}
