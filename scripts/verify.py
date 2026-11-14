@@ -48,13 +48,24 @@ def v_bootstrap():
     s = cf.describe_stacks(StackName="DezervLabA")["Stacks"][0]["StackStatus"]
     check("stack DezervLabA complete", s in ("CREATE_COMPLETE", "UPDATE_COMPLETE"), f"status={s}; run make bootstrap")
     lg = boto3.client("logs", region_name=REGION)
-    n, tok = 0, None
-    while True:
-        r = lg.filter_log_events(logGroupName="/dezerv/payments-gw", **({"nextToken": tok} if tok else {}))
-        n += len(r["events"]); tok = r.get("nextToken")
-        if not tok:
-            break
-    check(f"log group has >= 5000 events (found {n})", n >= 5000, "backfill skipped? delete streams in /dezerv/payments-gw and rerun make bootstrap")
+
+    def count_events():
+        n, tok = 0, None
+        while True:
+            r = lg.filter_log_events(logGroupName="/dezerv/payments-gw", **({"nextToken": tok} if tok else {}))
+            n += len(r["events"]); tok = r.get("nextToken")
+            if not tok:
+                return n
+
+    # Freshly back-dated events take a few minutes to become searchable (seen on the first workshop-account run: 4303 of 6080
+    # right after bootstrap). Poll instead of failing a healthy account.
+    n, waited = count_events(), 0
+    while n < 5000 and waited < 300:
+        print(f"      ... {n} log events searchable so far; CloudWatch is still indexing the backfill, waiting (up to 5 min)", flush=True)
+        time.sleep(20); waited += 20
+        n = count_events()
+    check(f"log group has >= 5000 events (found {n})", n >= 5000,
+          "still short after 5 min: delete the streams in /dezerv/payments-gw and rerun make bootstrap")
     check("smoke: tool Lambdas invoke", script("smoke_tools.py") is True, "see scripts/smoke_tools.py output")
     for p in ("oncall", "support"):
         try:

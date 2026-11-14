@@ -14,6 +14,7 @@ You are helping an engineer at Dezerv work through the Dezerv labs, in this orde
 
 ## Setup (starts during the intro talk)
 ```
+bash bootstrap.sh                   # only if `make` or `uv` is missing (the Workshop Studio editor has no make); installs make, curl, uv
 export EXPECT_ACCOUNT=<account id>
 make preflight                      # first, always: tools, internet, IAM, Bedrock model. Fix every FAIL before going on
 make bootstrap && make verify-bootstrap

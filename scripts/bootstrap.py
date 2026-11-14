@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, WaiterError
 
 ROOT = Path(__file__).resolve().parent.parent
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -91,7 +91,33 @@ def deploy_stack(cf, bucket, code_hash, data_hash="none"):
             return
         raise
     log(f"waiting for stack ({waiter}) ...")
-    cf.get_waiter(waiter).wait(StackName=STACK, WaiterConfig={"Delay": 10, "MaxAttempts": 90})
+    try:
+        cf.get_waiter(waiter).wait(StackName=STACK, WaiterConfig={"Delay": 10, "MaxAttempts": 90})
+    except WaiterError:
+        explain_stack_failure(cf)
+        sys.exit("stack deployment failed (reason above). Send the instructor the lines that start with FAILED.")
+
+
+def explain_stack_failure(cf):
+    """OnFailure=DELETE removes a failed stack, so describe_stacks then says 'does not exist'. The deleted stack's events are
+    still readable by stack id: print the real cause (usually an AccessDenied for the workshop role) instead of a traceback."""
+    try:
+        found = []
+        for p in cf.get_paginator("list_stacks").paginate(StackStatusFilter=["DELETE_COMPLETE", "ROLLBACK_COMPLETE", "CREATE_FAILED", "UPDATE_ROLLBACK_COMPLETE"]):
+            found += [s for s in p["StackSummaries"] if s["StackName"] == STACK]
+        if not found:
+            log("could not find the failed stack to read its events")
+            return
+        sid = max(found, key=lambda s: s["CreationTime"])["StackId"]     # the newest attempt
+        events = []
+        for p in cf.get_paginator("describe_stack_events").paginate(StackName=sid):
+            events += p["StackEvents"]
+        for e in sorted(events, key=lambda x: x["Timestamp"]):
+            reason = e.get("ResourceStatusReason", "")
+            if "FAILED" in e.get("ResourceStatus", "") and "cancelled" not in reason:
+                log(f"FAILED {e['LogicalResourceId']} ({e['ResourceType']}): {reason}")
+    except Exception as ex:   # diagnostics must never hide the original error
+        log(f"could not read the stack events ({type(ex).__name__}); run: aws cloudformation describe-stack-events --stack-name <id of the deleted {STACK}>")
 
 
 def seed_s3(s3, bucket, data):

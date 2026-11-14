@@ -97,7 +97,7 @@ About 4.3k transactions over 48 h including the 10:40 spike (1,890 SIP txns in 3
 | T-3 days | Book event accounts (one per squad; 72 h life). Confirm count against squads. |
 | T-2 days | Dry run on a workshop account (section 8). Fix anything it surfaces. |
 | T-1 day | Push the repo; confirm `.env`, `.labA.json`, `build/` are not in it. Rebook accounts if the dry-run account has expired. |
-| T-0, 09:30 | Everyone clones and runs `make bootstrap` during the mental-model talk (about 6 min in our account; time it on yours). Check `make verify-bootstrap`. |
+| T-0, 09:30 | Everyone clones. `make` is not installed on the Workshop Studio editor, so first `bash bootstrap.sh` (installs make, curl, uv; the Linux install path is untested). Then `export EXPECT_ACCOUNT=<id>`, `make preflight`, and `make bootstrap` during the mental-model talk (about 6 min in the Workshop Studio dry run). `make verify-bootstrap` may wait up to 5 minutes for CloudWatch to index the logs. |
 Rules for the room: synthetic data only; do not paste real code or credentials into the account.
 
 ## 5. Run of show (75 min, timings from the spec; times are targets, not measured with attendees)
@@ -147,7 +147,11 @@ If IAM blocks the stack: pre-deploy as admin and give attendees the `.env` value
 ## 9. Troubleshooting
 | Symptom | Cause | Fix |
 |---|---|---|
+| `bash: make: command not found` | `make` is not installed on the Workshop Studio editor | `bash bootstrap.sh` (installs make, curl, uv; needs root or passwordless sudo) |
 | `refusing: expected account X, credentials are for Y` | `EXPECT_ACCOUNT` guard did its job | Check your credentials |
+| `make bootstrap` prints `FAILED <Resource> ...: ... not authorized to perform: <action>` | the workshop role lacks an action the stack or a seed step needs (found so far: `dynamodb:UpdateTimeToLive`, `dynamodb:BatchWriteItem`; both already worked around) | Record the action (spike V-1) and tell the instructor. Do not widen the role. A failed create deletes the stack (`OnFailure=DELETE`); the cause is printed from its events |
+| `make preflight` FAIL on `ssm:describe_parameters` | old probe; the role cannot list SSM, and the labs never do | `git pull` (probe is now `ssm:get_parameter`); ignore on older clones. Preflight's IAM-simulation WARN is also harmless |
+| `verify-bootstrap`: `log group has >= 5000 events (found 4303)` | CloudWatch is still indexing the back-dated backfill | It now waits up to 5 min by itself. If you see it on an old clone: wait 2 min and run `make verify-bootstrap` again. Do **not** re-run `make bootstrap` (the stream exists, so it skips the backfill) |
 | Lambda build fails on `duckdb` | wrong wheel tag | Already `x86_64-manylinux_2_28`; needs internet |
 | Logs tools return nothing | wrong anchor / stale `.env` | Re-run `make bootstrap` *on the day* |
 | `RATE_LIMITED` | more than 30 calls a minute for one principal | Wait a minute; do not run two `oncall` workloads at once (eval + live demo) |
@@ -170,7 +174,7 @@ If IAM blocks the stack: pre-deploy as admin and give attendees the `.env` value
 `make destroy-agent NAME=<product>` per factory agent (Lab B and each squad). `make reset-labA` removes Lab A's Gateway, policy engine, memory, runtime and keeps the stack. `make destroy` removes Lab A, the stack and both buckets (run `destroy-agent` first for factory agents; they are not in the stack). `make destroy` needs working credentials for the account in `.env`.
 
 ## 11. Not built / not tested (be honest with the room)
-Not tested on a Workshop Studio account (V-1, V-7, V-10, V-18 open). Region coverage outside us-west-2 unknown. No ADOT/OTel tracing (trace ids are random when no span is active). `make eval` is slow. The audit hooks are always on in the agent (the spec had attendees enable them): present it as "here is how it works", not an exercise.
+Workshop Studio account: **one dry run so far (14 Nov 2026)**. Bootstrap, `verify-bootstrap` and the stack work with the Code Editor role after three fixes (`FINDINGS.md`, "Workshop Studio role"). **Not yet run under that role:** `make gateway` and everything after it in Lab A, Lab B, the capstone and the DeepEval judge. V-1 is partly settled; V-7, V-10, V-18 are open. Only one account was tried, so "every workshop account has the same role" is an assumption. Region coverage outside us-west-2 unknown. No ADOT/OTel tracing (trace ids are random when no span is active). `make eval` is slow. The audit hooks are always on in the agent (the spec had attendees enable them): present it as "here is how it works", not an exercise.
 Lab B: stretch S1 (Harness variant) and S2 (Go MCP server on Runtime) are **not built**. The `tools/mandates-go` Lambda and the Go forwarder were built and tested on macOS arm64 with Go 1.27; the Linux editor path (`make go-setup` tarball download) is **untested**. Capstone: only the `kyc-svc` profile was run end to end in an account; the other four are tested for generation, validation and rendering (`make test-capstone`), not deployed. No "golden" fallback account exists.
 
 ## 12. Lab B: agent factory and Go (what exists and how it works)

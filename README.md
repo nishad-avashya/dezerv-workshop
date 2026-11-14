@@ -12,6 +12,7 @@ Instructors start with **`INSTRUCTOR.md`** (resource inventory, run of show, Q&A
 
 ## Quick start (Lab A)
 ```
+bash bootstrap.sh                             # first, only if `make` or `uv` is missing (installs make, curl, uv; does not touch AWS)
 export EXPECT_ACCOUNT=<12-digit account id>   # refuses to run against any other account
 make preflight                                # first: tools, internet, IAM, Bedrock model access (read-only)
 make bootstrap && make verify-bootstrap       # about 6 min: stack, data, Lambdas, Cognito

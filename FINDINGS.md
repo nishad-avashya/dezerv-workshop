@@ -5,15 +5,36 @@ Spikes marked **needs re-check** depend on the Workshop Studio role and could no
 
 | ID | Question | Result |
 |---|---|---|
-| V-1 | Can the role deploy the stack and create Gateway, Policy, Memory, Runtime? | **Needs re-check.** Works with a broad IAM user. Gateway, policy engine, memory and runtime all created via the control-plane API. The workshop role is the open risk. |
+| V-1 | Can the role deploy the stack and create Gateway, Policy, Memory, Runtime? | **Needs re-check.** Works with a broad IAM user. Gateway, policy engine, memory and runtime all created via the control-plane API. **Workshop Studio dry run (14 Nov 2026): the stack and bootstrap now work, with three fixes** (see "Workshop Studio role" below). Gateway, policy engine, memory and runtime creation under the Code Editor role are **still untested**. |
 | V-2 | Can a REQUEST interceptor reject a call and a RESPONSE interceptor rewrite the body? | **Yes, both.** Reject by returning `transformedGatewayResponse` from the REQUEST interceptor (a tool result with `isError: true`). Rewrite the body from the RESPONSE interceptor. Gotcha: on REQUEST events `gatewayResponse` is present but `null`, so test the value, not the key. Needs `passRequestHeaders: true` to read the JWT. |
 | V-3 | Time/custom context in Cedar? | Not tested. Freeze stays in the interceptor (works, 5 s SSM cache). |
 | V-4 | How are JWT scopes exposed to Cedar? | `principal.hasTag("scope") && principal.getTag("scope") like "*db.read*"` works for Cognito client-credentials tokens (space-separated scope claim). Principal type `AgentCore::OAuthUser`. |
 | V-5 | Strands hook event names | `BeforeInvocationEvent`, `AfterInvocationEvent`, `BeforeToolCallEvent`, `AfterToolCallEvent`, `BeforeModelCallEvent` (strands-agents 1.64). `BeforeToolCallEvent.cancel_tool` is how step limits are enforced. |
 | V-6 | Memory seeding path | `BatchCreateMemoryRecords` works and records are listable within about 30 s. No LLM extraction wait. Each memory allows **one** semantic strategy with **one** namespace, so the strategy owns `/products/payments-gw` and records go in `/incidents` and `/runbooks` below it. |
-| V-7 | DeepEval Bedrock judge credentials | Works with ambient credentials via a custom `DeepEvalBaseLLM` over Bedrock Converse. Not tested under the Code Editor role. |
+| V-7 | DeepEval Bedrock judge credentials | Works with ambient credentials via a custom `DeepEvalBaseLLM` over Bedrock Converse. Under the Code Editor role, `bedrock-runtime:Converse` on the Sonnet 4.6 profile works (preflight PASS; Bedrock is reachable only through the workshop VPC endpoint, which the editor is inside). The DeepEval judge itself has **not** been run there yet. |
 | V-8 | Sonnet 4.6 profile id | `us.anthropic.claude-sonnet-4-6` (also `global.` variant). Newer Sonnet 5 / 5.5 profiles exist in this account. |
 | V-9 | CloudWatch backfill with old timestamps | Accepted when within 14 days. **Logs Insights is unreliable for this**: it rejects windows that end before the log group was created, and newly back-dated events were not queryable for several minutes (and at one point disappeared from queries while still in storage). The logs tools therefore use `FilterLogEvents` and aggregate in the Lambda. Audit queries in verify scripts also use `FilterLogEvents`. The anchor is chosen at bootstrap time (today 10:40 IST, or yesterday if it is before 11:20 IST). |
+
+## Workshop Studio role (first dry run, 14 Nov 2026, account 113656257293, us-west-2)
+
+Principal: `assumed-role/workshop-resources-ec2-CodeEditorInstanceRole-*` (the Code Editor instance role; presumably identical in every workshop account, which is **unconfirmed**: only one account was tried). Its policies: managed read-only CloudFormation/S3, SSM core, CloudWatch agent, plus `WorkshopManagedPolicy1-4`, `WorkshopCloudWatchPolicy`, two Bedrock deny policies (no bearer-token/API keys; model calls only through the workshop VPC endpoint) and `StackRoleProtection` (protects the stack's own roles). It has `bedrock-agentcore:*`, broad IAM, Lambda, DynamoDB, Cognito, S3, SSM, CloudFormation (stack-scoped; `DezervLabA` is allowed) and `iam:PassRole`.
+
+**What was denied, and what we changed** (each was found by running bootstrap, not by reading policies):
+
+| # | Denied for the editor role | Where it bit | Fix |
+|---|---|---|---|
+| 1 | `ssm:DescribeParameters` (list-all) | `make preflight` reported a false FAIL | preflight probes `ssm:GetParameter /dezerv/freeze` instead (`ParameterNotFound` = pass). The labs only get/put that one parameter. |
+| 2 | `dynamodb:UpdateTimeToLive` | CloudFormation `RateTable` failed, the whole stack rolled back (`OnFailure=DELETE`) | removed `TimeToLiveSpecification` from the template and from `tools/gen_template.py`. The rate-limit key already contains the minute, so TTL was only cleanup. |
+| 3 | `dynamodb:BatchWriteItem` | `seed_tickets` (`batch_writer()`) failed with AccessDenied after the stack was created | seed with plain `PutItem` (40 tickets). |
+
+Everything else in bootstrap worked: IAM roles (4) with `CAPABILITY_NAMED_IAM`, 7 Lambdas, Cognito pool/domain/clients, S3 bucket and upload, SSM parameter, `PutItem`, CloudWatch Logs `CreateLogGroup`/`PutLogEvents` on `/dezerv/*` (6080 + 500 events), Cognito tokens for `oncall` and `support`, and all 14 tool smoke calls. Total bootstrap about 6 minutes once the three fixes were in.
+
+Other observations:
+- `preflight` cannot run `iam:SimulatePrincipalPolicy` with this role (WARN, harmless). The simulation also passes no resource ARNs, so it would mis-report resource-scoped allows anyway: bootstrap is the real test.
+- `make` was **not installed** on the editor. `bash bootstrap.sh` installs make, curl and uv (the Linux path is untested: needs root or passwordless sudo).
+- `OnFailure=DELETE` hides the real cause: after a failed create `describe_stacks` says "does not exist". Bootstrap now reads the deleted stack's events by stack id and prints the `FAILED` lines.
+- A freshly back-dated log backfill was only partly searchable right after bootstrap (4303 of 6080 events with `FilterLogEvents`, and the incident window returned 0). This is the same effect as V-9 but for `FilterLogEvents`, not only Logs Insights. `verify-bootstrap` now waits up to 5 minutes for the count instead of failing.
+- **Still untested under this role:** `make gateway`, `policy`, `interceptors`, `memory`, `deploy-agent` (Runtime), `eval`, Lab B and the capstone.
 
 ## Other things learned
 
