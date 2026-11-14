@@ -1,0 +1,78 @@
+# Capstone ready profile: kyc-svc. All data it generates is synthetic.
+name: kyc-svc
+title: KYC vendor latency causes onboarding drop-off after a retry-policy change
+purpose: verifies PAN and Aadhaar through a third-party KYC provider
+stack: Go, MongoDB kyc_requests, CloudWatch /dezerv/kyc-svc
+primary_service: kyc-svc
+other_services:
+- notifications-svc
+collection: kyc_requests
+id_field: request_id
+id_prefix: KR
+status_ok: VERIFIED
+status_bad: FAILED
+error_code: E_KYC_VENDOR_TIMEOUT
+error_meaning: KYC vendor call timed out after retries
+extra:
+  vendor:
+  - VendorX
+  - VendorY
+  document:
+  - PAN
+  - AADHAAR
+pii_fields:
+- customer_pan
+- customer_mobile
+volume: 1400
+failures: 260
+baseline_failure_rate: 0.01
+incident:
+  alert_name: KycSuccessRateLow
+  summary: KYC success rate fell to 81 percent (baseline 99 percent)
+  deploy:
+    version: v1.8.1
+    commit: 9d8e7a1
+    author: neha.r
+    diff: kyc/vendor.go:51 retry attempts raised from 2 to 5 with no backoff (retry-policy cleanup)
+  error_log:
+    caller: kyc/vendor.go:51
+    template: T-KYC-VENDOR-TIMEOUT
+    msg: vendor call timed out after 5 retries
+  red_herring:
+    service: notifications-svc
+    caller: notify/sms.go:29
+    template: T-SMS-SLOW
+    msg: sms provider latency elevated
+  root_cause: Retry-policy change in kyc-svc v1.8.1 (commit 9d8e7a1, kyc/vendor.go:51) raised retries from 2 to 5 without backoff, multiplying vendor load
+    and timeouts
+  marker: v1\.8\.1|9d8e7a1
+  mitigation: roll back kyc-svc to v1.8.0
+tool:
+  name: get_kyc_request
+  arg: request_id
+  description: 'One KYC request: status, vendor, document type, error code. PII masked.'
+past_incidents:
+- - Vendor outage
+  - KYC vendor returned 503 for 20 minutes
+  - Switch to the secondary vendor
+- - OTP delivery failures
+  - SMS provider throttled
+  - Raise the provider quota
+- - Stuck PENDING requests
+  - Callback queue consumer crashed
+  - Restart consumer, replay callbacks
+- - Duplicate verifications
+  - Retry without idempotency key
+  - Hotfix key propagation
+- - Slow PAN lookups
+  - Vendor latency spike during a bank holiday
+  - Wait for recovery, widen timeout temporarily
+runbooks:
+- - RB-KYC-VENDOR-TIMEOUT
+  - E_KYC_VENDOR_TIMEOUT spikes
+  - recent kyc-svc deploys, retry settings, vendor status page
+  - roll back the retry change (human approved)
+- - RB-KYC-PENDING
+  - requests stuck PENDING
+  - callback queue depth and consumer health
+  - restart the consumer (human approved)

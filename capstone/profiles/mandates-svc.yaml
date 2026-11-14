@@ -1,0 +1,79 @@
+# Capstone ready profile: mandates-svc. All data it generates is synthetic.
+name: mandates-svc
+title: Spike in UPI AutoPay mandate REVOKED after a bank-side change; looks like a PSP failure but is not
+purpose: manages UPI AutoPay mandates and their lifecycle
+stack: Go, MongoDB mandate_events, CloudWatch /dezerv/mandates-svc
+primary_service: mandates-svc
+other_services:
+- payments-gw
+collection: mandate_events
+id_field: event_id
+id_prefix: ME
+status_ok: ACTIVE
+status_bad: REVOKED
+error_code: E_MANDATE_REVOKED
+error_meaning: Mandate revoked by the issuer bank
+extra:
+  bank:
+  - okhdfc
+  - okicici
+  - oksbi
+  action:
+  - DEBIT
+  - VERIFY
+pii_fields:
+- customer_vpa
+- customer_account
+volume: 1200
+failures: 210
+baseline_failure_rate: 0.008
+incident:
+  alert_name: MandateRevokedRateHigh
+  summary: Mandate revocations at 17 percent of debits (baseline 0.8 percent)
+  deploy:
+    version: v3.2.0
+    commit: ab12cd3
+    author: vikas.t
+    diff: mandate/verify.go:77 stricter bank callback signature check (security hardening)
+  error_log:
+    caller: mandate/verify.go:77
+    template: T-MANDATE-SIG
+    msg: bank callback signature rejected, mandate marked REVOKED
+  red_herring:
+    service: payments-gw
+    caller: psp/client.go:102
+    template: T-PSP-SLOW
+    msg: psp latency p95 above 1.5s
+  root_cause: Stricter bank callback signature check in mandates-svc v3.2.0 (commit ab12cd3, mandate/verify.go:77) wrongly marked valid mandates REVOKED;
+    the PSP is healthy
+  marker: v3\.2\.0|ab12cd3
+  mitigation: roll back mandates-svc to v3.1.9 and re-verify affected mandates
+tool:
+  name: get_mandate_status
+  arg: event_id
+  description: 'One mandate event: status, bank, action, error code. VPA and account masked.'
+past_incidents:
+- - Bank maintenance window
+  - Issuer bank rejected callbacks for 30 minutes
+  - Retry after the window
+- - Mandate expiry wave
+  - Mandates reached end date together
+  - Notify customers to renew
+- - Callback replay
+  - Duplicate bank callbacks
+  - Idempotent handling
+- - Signature key rotation
+  - Bank rotated keys without notice
+  - Load the new key
+- - Pending bank state
+  - Bank slow to confirm
+  - Wait and re-poll
+runbooks:
+- - RB-MANDATE-REVOKED-SPIKE
+  - revocation spike
+  - recent mandates-svc deploys, bank callback errors, PSP health
+  - roll back the verification change (human approved)
+- - RB-MANDATE-PENDING
+  - mandates stuck PENDING_BANK
+  - bank callback queue
+  - re-poll the bank (human approved)

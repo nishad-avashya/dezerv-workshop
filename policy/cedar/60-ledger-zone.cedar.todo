@@ -1,0 +1,23 @@
+// CP-6 (EXERCISE): declare a forbidden zone.
+//
+// The agent must never read anything about ledger-svc. Write a rule that forbids changes___get_recent_deploys when the
+// service input is "ledger-svc". Rename this file to 60-ledger-zone.cedar (drop .todo), run `make policy`, then call
+// get_recent_deploys for ledger-svc (denied) and payments-gw (allowed).
+//
+// Two things about the policy analyzer (found in testing, see FINDINGS.md):
+//   * guard every read of a tool input:   context.input has service && context.input.service == "..."
+//   * prefer `when { ... }` and scope the principal (`principal is AgentCore::OAuthUser`). `unless { ... like ... }` rules on
+//     inputs were rejected as "Overly Restrictive".
+// (The spec's original idea, "forbid find_transactions when the filter has no time bound", is not expressible: the filter is a
+//  free-form object, so Cedar cannot look inside it. Good discussion point: what is Cedar good for, and what belongs in the tool?)
+//
+// forbid(
+//   principal is AgentCore::OAuthUser,
+//   action == AgentCore::Action::"changes___get_recent_deploys",
+//   resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
+// )
+// when {
+//   /* TODO */
+// };
+//
+// Solution: policy/solutions/60-forbid-ledger-zone.cedar   (or `make cp6`)

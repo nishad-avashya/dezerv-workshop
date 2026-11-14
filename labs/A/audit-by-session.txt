@@ -1,0 +1,4 @@
+# CloudWatch Logs Insights, log group /dezerv/agent-audit. Replace the session id.
+fields @timestamp, event, tool, decision.result as decision, decision.reason as reason, latency_ms, tokens
+| filter session_id = 'REPLACE_ME'
+| sort @timestamp asc

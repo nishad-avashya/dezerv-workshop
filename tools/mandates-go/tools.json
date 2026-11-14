@@ -1,0 +1,14 @@
+{
+  "target": "mandates",
+  "description": "UPI AutoPay mandate state (Go Lambda). Read-only, plus a decoy mutation that policy must forbid.",
+  "scope": "payments/mandates.read",
+  "tools": [
+    {"name": "get_mandate_status",
+     "description": "UPI AutoPay mandate state for a user: ACTIVE, PAUSED, REVOKED, EXPIRED or PENDING_BANK. VPA and account number are masked.",
+     "inputSchema": {"type": "object", "properties": {"user_id": {"type": "string", "description": "e.g. U-1042"}}, "required": ["user_id"]}},
+    {"name": "revoke_mandate",
+     "description": "DECOY: revoke a mandate. A no-op that policy must forbid.",
+     "inputSchema": {"type": "object", "properties": {"user_id": {"type": "string", "description": "User id"}}, "required": ["user_id"]},
+     "mutating": true}
+  ]
+}

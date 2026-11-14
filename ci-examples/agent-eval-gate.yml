@@ -1,0 +1,30 @@
+# EXAMPLE ONLY. This file lives in ci-examples/ on purpose, so it does NOT run in this repo.
+# To use it, copy it to .github/workflows/ in the repo that owns your agent, and set the EVAL_ROLE_ARN variable.
+# Shown in the workshop, not executed there. Runs the incident-replay gate on pull requests that touch the agent or its policy.
+name: agent-eval-gate
+on:
+  pull_request:
+    paths: ["agent/**", "policy/**", "lambdas/**", "evals/replay/**"]
+permissions:
+  id-token: write      # OIDC into a dedicated, synthetic-data-only AWS account
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.EVAL_ROLE_ARN }}      # least-privilege role: invoke the runtime, read /dezerv/agent-audit, Bedrock judge
+          aws-region: us-west-2
+      - name: Deploy the PR version of the agent to the eval runtime
+        run: make deploy-agent
+      - name: Replay incidents against the deployed agent
+        run: make eval OUT=evals/report.json
+      - name: Gate (non-zero exit blocks the merge)
+        run: make gate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: eval-report, path: evals/report.json }

@@ -1,0 +1,1 @@
+Citations: every claim in the Evidence section must cite its source, using the `source`, `query` and `as_of` fields of the tool result, plus `commit`, `caller` (file:line) and `template_id` for log lines, and deploy version/commit for changes. Do not state a root cause that you cannot cite.

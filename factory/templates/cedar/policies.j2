@@ -1,0 +1,76 @@
+{#- Cedar statements. Each macro emits ONE statement; render.py collects them into files. {{GATEWAY_ARN}} is substituted at deploy time. -#}
+
+{%- macro permit_reads(target, tools, scope) -%}
+permit(
+  principal is AgentCore::OAuthUser,
+{{ cedar_actions(target, tools) }}
+  resource == AgentCore::Gateway::"{{ '{{GATEWAY_ARN}}' }}"
+)
+when {
+  principal.hasTag("scope") && principal.getTag("scope") like "*{{ scope }}*"
+};
+{%- endmacro -%}
+
+{%- macro permit_ticket_writes(project) -%}
+permit(
+  principal is AgentCore::OAuthUser,
+  action in [
+    AgentCore::Action::"tickets___create_ticket",
+    AgentCore::Action::"tickets___add_comment"
+  ],
+  resource == AgentCore::Gateway::"{{ '{{GATEWAY_ARN}}' }}"
+)
+when {
+  principal.hasTag("scope") && principal.getTag("scope") like "*tickets.write*" &&
+  context.input has project && context.input.project == "{{ project }}"
+};
+{%- endmacro -%}
+
+{%- macro forbid_mutations(pairs) -%}
+forbid(
+  principal,
+{{ cedar_pairs(pairs) }}
+  resource == AgentCore::Gateway::"{{ '{{GATEWAY_ARN}}' }}"
+);
+{%- endmacro -%}
+
+{%- macro forbid_unbounded(pairs, max_rows) -%}
+forbid(
+  principal,
+{{ cedar_pairs(pairs) }}
+  resource == AgentCore::Gateway::"{{ '{{GATEWAY_ARN}}' }}"
+)
+when {
+  context.input has limit && context.input.limit > {{ max_rows }}
+};
+{%- endmacro -%}
+
+{%- macro explicit_deny(target, tools, scope) -%}
+forbid(
+  principal is AgentCore::OAuthUser,
+{{ cedar_actions(target, tools) }}
+  resource == AgentCore::Gateway::"{{ '{{GATEWAY_ARN}}' }}"
+)
+unless {
+  principal.hasTag("scope") && principal.getTag("scope") like "*{{ scope }}*"
+};
+{%- endmacro -%}
+
+{%- macro forbid_tool(target, tool) -%}
+forbid(
+  principal is AgentCore::OAuthUser,
+  action == AgentCore::Action::"{{ target }}___{{ tool }}",
+  resource == AgentCore::Gateway::"{{ '{{GATEWAY_ARN}}' }}"
+);
+{%- endmacro -%}
+
+{%- macro forbid_service(target, tools, service) -%}
+forbid(
+  principal is AgentCore::OAuthUser,
+{{ cedar_actions(target, tools) }}
+  resource == AgentCore::Gateway::"{{ '{{GATEWAY_ARN}}' }}"
+)
+when {
+  context.input has service && context.input.service == "{{ service }}"
+};
+{%- endmacro -%}

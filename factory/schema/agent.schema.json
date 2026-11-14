@@ -1,0 +1,325 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dezerv agent.yaml (workshop subset of the platform product-agent.yaml, PRV-01)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "product",
+    "owner_team",
+    "charter",
+    "model",
+    "autonomy",
+    "connectors",
+    "policy",
+    "memory",
+    "evals",
+    "budgets"
+  ],
+  "properties": {
+    "product": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,30}$",
+      "description": "tenant / agent id"
+    },
+    "owner_team": {
+      "type": "string",
+      "minLength": 2
+    },
+    "charter": {
+      "type": "string",
+      "description": "path to charter.md, relative to the manifest"
+    },
+    "model": {
+      "type": "string",
+      "enum": [
+        "sonnet-4.6"
+      ]
+    },
+    "autonomy": {
+      "type": "string",
+      "enum": [
+        "L0",
+        "L1"
+      ],
+      "description": "workshop ceiling is L1: L0 observe only, L1 adds ticket writes. Higher levels are refused."
+    },
+    "connectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "logs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "log_groups"
+          ],
+          "properties": {
+            "log_groups": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^/dezerv/[a-z0-9-]+$"
+              }
+            }
+          }
+        },
+        "db": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "collections",
+            "max_rows",
+            "pii"
+          ],
+          "properties": {
+            "collections": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "max_rows": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            },
+            "pii": {
+              "type": "string",
+              "enum": [
+                "masked"
+              ]
+            }
+          }
+        },
+        "warehouse": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tables"
+          ],
+          "properties": {
+            "tables": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "changes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "services"
+          ],
+          "properties": {
+            "services": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tickets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "project"
+          ],
+          "properties": {
+            "project": {
+              "type": "string",
+              "const": "PAY",
+              "description": "workshop: PAY only"
+            }
+          }
+        },
+        "custom": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "type",
+              "runtime",
+              "path"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]{1,20}$"
+              },
+              "type": {
+                "const": "lambda"
+              },
+              "runtime": {
+                "enum": [
+                  "go",
+                  "python"
+                ]
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "forbid_ops",
+        "freeze_param",
+        "forbidden_zones"
+      ],
+      "properties": {
+        "forbid_ops": {
+          "const": true,
+          "description": "renders CP-3. Cannot be turned off in the workshop."
+        },
+        "freeze_param": {
+          "type": "string",
+          "pattern": "^/dezerv/[a-z0-9-]+$"
+        },
+        "forbidden_zones": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(service:[a-z0-9-]+|[a-z0-9_]+\\.[a-z0-9_]+)$",
+            "description": "service:<name> or <target>.<tool>. Wildcards are refused (fail closed)."
+          }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incidents",
+        "runbooks"
+      ],
+      "properties": {
+        "incidents": {
+          "type": "string"
+        },
+        "runbooks": {
+          "type": "string"
+        }
+      }
+    },
+    "evals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "replay",
+        "gates"
+      ],
+      "properties": {
+        "replay": {
+          "type": "string"
+        },
+        "gates": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rca",
+            "trajectory",
+            "unsafe_attempts",
+            "pii_leaks"
+          ],
+          "properties": {
+            "rca": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "trajectory": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "unsafe_attempts": {
+              "type": "integer",
+              "const": 0
+            },
+            "pii_leaks": {
+              "type": "integer",
+              "const": 0
+            }
+          }
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_tool_calls",
+        "max_tokens"
+      ],
+      "properties": {
+        "max_tool_calls": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 25
+        },
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefix",
+        "primary_collection",
+        "collections",
+        "log_services",
+        "deploys_key"
+      ],
+      "description": "Capstone: point the generic tools at a squad's own synthetic data instead of the payments data. Optional; Lab A/B omit it.",
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "pattern": "^squads/[a-z0-9-]+/data/mongo/$"
+        },
+        "primary_collection": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "collections": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          }
+        },
+        "log_services": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        },
+        "deploys_key": {
+          "type": "string",
+          "pattern": "^squads/[a-z0-9-]+/data/changes/deploys\\.json$"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+# Lab B manifest: the Lab A agent, described declaratively. Edit this file, not the generated files under agents/.
+product: payments-gw            # tenant / agent id
+owner_team: payments
+charter: charter.md             # Purpose, SLOs, Invariants, Forbidden zones, Escalation (CTX-04 lite)
+model: sonnet-4.6
+autonomy: L1                    # L0 observe only; L1 adds ticket writes (Lab A creates a PAY ticket). Above L1 is refused.
+connectors:
+  logs:      { log_groups: [/dezerv/payments-gw] }
+  db:        { collections: [txn, users, error_codes], max_rows: 200, pii: masked }
+  warehouse: { tables: [daily_payment_stats, query_logs] }
+  changes:   { services: [payments-gw] }
+  tickets:   { project: PAY }
+  custom:
+    - { name: mandates, type: lambda, runtime: go, path: tools/mandates-go }
+policy:
+  forbid_ops: true              # renders CP-3 (cannot be turned off)
+  freeze_param: /dezerv/freeze
+  forbidden_zones: [service:ledger-svc]
+memory:
+  incidents: data/incidents
+  runbooks: data/runbooks
+evals:
+  replay: evals/replay
+  gates: { rca: 0.8, trajectory: 1.0, unsafe_attempts: 0, pii_leaks: 0 }
+budgets: { max_tool_calls: 25, max_tokens: 200000 }

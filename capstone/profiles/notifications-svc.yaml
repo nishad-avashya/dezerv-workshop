@@ -1,0 +1,77 @@
+# Capstone ready profile: notifications-svc. All data it generates is synthetic.
+name: notifications-svc
+title: OTP SMS delivery failures from provider throttling; masked phone numbers in evidence
+purpose: sends OTP and transactional SMS and email
+stack: Go, MongoDB messages, CloudWatch /dezerv/notifications-svc
+primary_service: notifications-svc
+other_services:
+- kyc-svc
+collection: messages
+id_field: message_id
+id_prefix: MSG
+status_ok: DELIVERED
+status_bad: FAILED
+error_code: E_SMS_THROTTLED
+error_meaning: SMS provider throttled the request
+extra:
+  channel:
+  - SMS
+  - EMAIL
+  provider:
+  - ProviderA
+  - ProviderB
+pii_fields:
+- customer_mobile
+- customer_email
+volume: 1500
+failures: 300
+baseline_failure_rate: 0.012
+incident:
+  alert_name: OtpDeliveryLow
+  summary: OTP delivery rate fell to 78 percent (baseline 98 percent)
+  deploy:
+    version: v0.9.5
+    commit: cc00bb2
+    author: ravi.s
+    diff: notify/send.go:64 batch size raised from 50 to 500 per call (throughput tuning)
+  error_log:
+    caller: notify/send.go:64
+    template: T-SMS-THROTTLED
+    msg: provider returned 429 too many requests
+  red_herring:
+    service: kyc-svc
+    caller: kyc/vendor.go:73
+    template: T-KYC-SLOW
+    msg: kyc vendor latency above p95
+  root_cause: Batch size increase in notifications-svc v0.9.5 (commit cc00bb2, notify/send.go:64) from 50 to 500 triggered SMS provider throttling (429)
+  marker: v0\.9\.5|cc00bb2
+  mitigation: roll back notifications-svc to v0.9.4
+tool:
+  name: get_delivery_status
+  arg: message_id
+  description: 'One message: channel, provider, status, error code. Phone and email masked.'
+past_incidents:
+- - Provider outage
+  - ProviderA down for 15 minutes
+  - Fail over to ProviderB
+- - DLT template rejected
+  - Template not registered
+  - Register the template
+- - Quota exhausted
+  - Monthly quota used up
+  - Raise quota
+- - Delayed delivery
+  - Carrier congestion
+  - Wait, notify customers
+- - Duplicate OTPs
+  - Retry without idempotency key
+  - Hotfix
+runbooks:
+- - RB-SMS-THROTTLE
+  - 429 throttling from the provider
+  - recent notifications-svc deploys, batch size, provider quota
+  - roll back the batch change (human approved)
+- - RB-OTP-DELIVERY
+  - OTP delivery drops
+  - provider status, template registration
+  - fail over to the secondary provider (human approved)

@@ -1,0 +1,77 @@
+# Capstone ready profile: nav-ingest. All data it generates is synthetic.
+name: nav-ingest
+title: Mutual fund NAV file arrives late, so portfolio values are stale in the app (data pipeline archetype)
+purpose: ingests daily mutual fund NAV files and publishes them to portfolios
+stack: Python, S3, MongoDB ingest_runs, CloudWatch /dezerv/nav-ingest
+primary_service: nav-ingest
+other_services:
+- ledger-recon
+collection: ingest_runs
+id_field: run_id
+id_prefix: IR
+status_ok: PUBLISHED
+status_bad: STALE
+error_code: E_NAV_MISSING
+error_meaning: NAV for the allotment date is missing
+extra:
+  amc:
+  - AMC-A
+  - AMC-B
+  - AMC-C
+  file_type:
+  - NAV
+  - HOLDINGS
+pii_fields: []
+volume: 800
+failures: 140
+baseline_failure_rate: 0.01
+incident:
+  alert_name: NavStale
+  summary: NAV not published for 140 schemes by 09:00 (baseline 0)
+  deploy:
+    version: v1.3.0
+    commit: f00d123
+    author: anil.p
+    diff: ingest/schedule.py:22 file pickup moved from 06:00 to 09:30 (cron cleanup)
+  error_log:
+    caller: ingest/schedule.py:22
+    template: T-NAV-NOT-PICKED
+    msg: no NAV file found at pickup time, publish skipped
+  red_herring:
+    service: ledger-recon
+    caller: recon/join.py:140
+    template: T-RECON-SLOW
+    msg: recon step slower than usual
+  root_cause: Cron cleanup in nav-ingest v1.3.0 (commit f00d123, ingest/schedule.py:22) moved the file pickup from 06:00 to 09:30, after the 09:00 publish
+    deadline
+  marker: v1\.3\.0|f00d123
+  mitigation: restore the 06:00 schedule (roll back to v1.2.9) and trigger a manual ingest
+tool:
+  name: get_ingest_run
+  arg: run_id
+  description: 'One ingest run: AMC, file type, status, pickup time, error code.'
+past_incidents:
+- - AMC file late
+  - AMC-B delivered after 08:00
+  - Manual ingest on arrival
+- - Corrupt file
+  - Truncated upload
+  - Request resend
+- - Schema change
+  - AMC changed a column
+  - Update the parser
+- - Holiday file
+  - No NAV on a market holiday
+  - Carry forward
+- - Duplicate publish
+  - Run triggered twice
+  - Idempotent publish
+runbooks:
+- - RB-NAV-LATE
+  - NAV not published by deadline
+  - recent nav-ingest deploys, pickup schedule, AMC delivery times
+  - restore the schedule, manual ingest (human approved)
+- - RB-NAV-CORRUPT
+  - NAV file invalid
+  - file size, checksum
+  - request a resend from the AMC

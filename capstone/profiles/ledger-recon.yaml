@@ -1,0 +1,78 @@
+# Capstone ready profile: ledger-recon. All data it generates is synthetic.
+name: ledger-recon
+title: Nightly reconciliation lag after a schema change; ledger mismatches flagged
+purpose: reconciles ledger entries against PSP settlement files
+stack: Python, Snowflake, MongoDB recon_runs, CloudWatch /dezerv/ledger-recon
+primary_service: ledger-recon
+other_services:
+- kyc-svc
+collection: recon_runs
+id_field: run_id
+id_prefix: RR
+status_ok: COMPLETE
+status_bad: LAGGING
+error_code: E_RECON_LAG
+error_meaning: Reconciliation job behind its SLA
+extra:
+  partition:
+  - p1
+  - p2
+  - p3
+  source:
+  - psp
+  - bank
+pii_fields:
+- customer_account
+volume: 900
+failures: 150
+baseline_failure_rate: 0.01
+incident:
+  alert_name: ReconLagHigh
+  summary: Reconciliation 3 hours behind SLA (baseline 0)
+  deploy:
+    version: v2.5.0
+    commit: de45f67
+    author: meera.k
+    diff: recon/join.py:140 join on settlements widened after schema change, drops partition pruning
+  error_log:
+    caller: recon/join.py:140
+    template: T-RECON-SLOW-JOIN
+    msg: join scanned all partitions, step exceeded budget
+  red_herring:
+    service: kyc-svc
+    caller: kyc/vendor.go:73
+    template: T-KYC-SLOW
+    msg: kyc vendor latency above p95
+  root_cause: Schema change in ledger-recon v2.5.0 (commit de45f67, recon/join.py:140) dropped partition pruning in the settlements join, making nightly
+    reconciliation slow
+  marker: v2\.5\.0|de45f67
+  mitigation: roll back ledger-recon to v2.4.9 or restore the partition filter
+tool:
+  name: get_recon_run
+  arg: run_id
+  description: 'One reconciliation run: partition, source, status, duration, error code.'
+past_incidents:
+- - Late settlement file
+  - PSP delivered the file 2 hours late
+  - Rerun after arrival
+- - Duplicate settlement rows
+  - File delivered twice
+  - Deduplicate by id
+- - Warehouse queue
+  - Warehouse was saturated
+  - Reschedule off-peak
+- - Rounding drift
+  - One paisa mismatches
+  - Fix rounding rule
+- - Missing partition
+  - Partition not created
+  - Create it, rerun
+runbooks:
+- - RB-RECON-LAG
+  - recon behind SLA
+  - recent ledger-recon deploys, slowest steps, warehouse load
+  - roll back or restore the filter (human approved)
+- - RB-LEDGER-MISMATCH
+  - ledger mismatches flagged
+  - rounding changes, duplicate rows
+  - re-post affected entries (human approved)
