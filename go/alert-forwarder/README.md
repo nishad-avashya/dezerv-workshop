@@ -3,8 +3,8 @@
 A small Go service that receives an alert webhook and asks the payments on-call agent (AgentCore Runtime) to investigate, then prints the diagnosis. About 170 lines, `aws-sdk-go-v2` (`service/bedrockagentcore`, `InvokeAgentRuntime`, streaming read of the response body), `log/slog` JSON logs.
 
 ```
-make run-forwarder NAME=payments-gw          # or: RUNTIME_ARN=arn:aws:bedrock-agentcore:... go run . -addr :8080
-curl -X POST localhost:8080/alert -d @data/alerts/inc-sip-timeout.json
+make run-forwarder NAME=payments-gw          # port 8090 (PORT=... to change); or: RUNTIME_ARN=arn:aws:bedrock-agentcore:... go run . -addr :8090
+curl -X POST localhost:8090/alert -d @data/alerts/inc-sip-timeout.json
 make go-test                                  # five behaviours covered without AWS (fake invoker)
 ```
 No Go on the machine: `make go-prebuilt` installs a prebuilt binary to `bin/alert-forwarder`.

@@ -44,7 +44,7 @@ Second editor (Build with Skills)? Clone the repo, `export EXPECT_ACCOUNT=...`, 
 | Part | Do | Verify | Teaching point |
 |---|---|---|---|
 | 1 (8) | "Use the Dezerv factory to create an agent for payments-gw from agent.yaml": `make new-agent NAME=payments-gw FROM=labs/B/agent.yaml`, `make deploy-agent NAME=payments-gw` | `make verify-labB-part1` | One manifest renders prompt, Gateway targets, Cedar, memory and eval gates. Compare with Lab A's pack. Break the manifest on purpose (`autonomy: L2`, a wildcard zone): it refuses. |
-| 2 (10) | `make run-forwarder NAME=payments-gw`, then `curl -X POST localhost:8080/alert -d @data/alerts/inc-sip-timeout.json` | `make verify-labB-part2` | A Go service calls the deployed agent; session per alert fingerprint; fail-safe pages a human if the agent is down. |
+| 2 (10) | `make run-forwarder NAME=payments-gw`, then `curl -X POST localhost:8090/alert -d @data/alerts/inc-sip-timeout.json` | `make verify-labB-part2` | A Go service calls the deployed agent; session per alert fingerprint; fail-safe pages a human if the agent is down. |
 | 3 (10) | add `{ name: mandates, type: lambda, runtime: go, path: tools/mandates-go }` under `connectors.custom` in `labs/B/agent.yaml`; `make new-agent ...`; `make deploy-agent NAME=payments-gw`; ask "Is user U-1042's SIP failing because of their mandate or because of the PSP?" | `make verify-labB-part3` | A Go Lambda is a governed tool. Expected answer: mandate ACTIVE, two `E_PSP_TIMEOUT` failures, so it is the PSP. The factory derived the Cedar rules and scope. |
 | 4 (2) | add `service:ledger-svc` to `policy.forbidden_zones`; re-render; deploy | `make verify-labB-part4` | Policy follows the manifest. |
 

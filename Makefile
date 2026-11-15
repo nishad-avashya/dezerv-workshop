@@ -98,8 +98,9 @@ go-prebuild:    ## (maintainers) build the prebuilt binaries committed under pre
 	bash scripts/go_prebuild.sh
 go-prebuilt:    ## attendees without Go: install the prebuilt forwarder to bin/alert-forwarder
 	bash scripts/go_prebuild.sh --install
-run-forwarder:  ## run the Go alert forwarder against the deployed runtime (NAME= for a factory agent)
-	cd go/alert-forwarder && RUNTIME_ARN=$$(python3 -c "import json;print(json.load(open('../../$(if $(NAME),agents/$(NAME)/.state.json,.labA.json)'))['runtime_arn'])") go run . -addr :8080
+PORT ?= 8090   # forwarder port; 8080 is taken by the workshop editor (override: make run-forwarder PORT=9000)
+run-forwarder:  ## run the Go alert forwarder in this terminal (NAME= for a factory agent, PORT= to change 8090); send the alert from a second terminal
+	bash scripts/run_forwarder.sh "$(NAME)" "$(PORT)"
 
 solution-labB-part1: link-labA           ## catch up: end of Lab B Part 1 (factory agent rendered + deployed). Needs Lab A: make solution-part6
 	$(MAKE) new-agent NAME=payments-gw FROM=labs/B/agent.yaml

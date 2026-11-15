@@ -2,7 +2,7 @@
 
 Lab A built **one** agent by hand. Lab B turns it into a template driven by one file, `agent.yaml`, and connects it to a Go stack in both directions: a Go service **calls** the agent, and a Go function **is a tool** for the agent.
 
-**Prerequisite:** Lab A is deployed (`make verify-labA-part6` passes). Behind? `make solution-part6`.
+**Prerequisite:** Lab A is deployed: the Gateway, policy engine, memory and Runtime exist. Check with `make link-labA`, which should print `found gateway_id, policy_engine_id, memory_id, runtime_id`. Behind? `make solution-part6` (about 10 minutes; it does not run the eval). `make verify-labA-part6` also needs the baseline eval (`make eval`, about 12 minutes), which Lab B does not need.
 **Second editor?** The Build-with-Skills editor is a separate machine in the same account. Clone the repo, then run `make link-labA`: it rebuilds `.env` from the existing stack. Nothing is redeployed. Set `EXPECT_ACCOUNT` first.
 **Go:** `go version`. If missing: `make go-setup`. If you cannot install Go: `make go-prebuilt` (forwarder) and the factory uses the prebuilt Lambda zip automatically.
 
@@ -30,11 +30,21 @@ Try breaking the manifest: set `autonomy: L2`, add a wildcard zone, set `forbid_
 
 ## Part 2: a Go service calls the agent (10 min)
 `go/alert-forwarder` is a small Go HTTP handler shaped like a Dezerv service. It receives an alert webhook and calls the deployed agent with `InvokeAgentRuntime`, one session per alert fingerprint, logging JSON with `commit` and `caller` fields (the same fields as Lab A's logs).
+Use **two terminals**. Terminal 1 starts the forwarder and stays busy; terminal 2 sends the alert.
 ```
-make run-forwarder NAME=payments-gw            # terminal 1
-curl -X POST localhost:8080/alert -d @data/alerts/inc-sip-timeout.json     # terminal 2; the diagnosis prints in terminal 1
-make verify-labB-part2
+make run-forwarder NAME=payments-gw            # terminal 1: prints the exact curl for terminal 2, then listens on :8090
 ```
+```
+cd <repo root>                                 # terminal 2: the @data/... path is relative to the repo root
+curl -X POST localhost:8090/alert -d @data/alerts/inc-sip-timeout.json     # the diagnosis prints in terminal 1 (1-2 min)
+```
+```
+make verify-labB-part2                         # run after the diagnosis appeared; it starts its own forwarder on :8098
+```
+Notes:
+- `make` finds Go by itself. Only if you type `go` by hand in a **new terminal** do you need it on your PATH: `export PATH=$HOME/.local/go/bin:$PATH` (once per terminal), or save it for good with `echo 'export PATH=$HOME/.local/go/bin:$PATH' >> ~/.bashrc`.
+- The port is 8090 because the workshop editor uses 8080. Pick another with `make run-forwarder NAME=payments-gw PORT=9000` (and use it in the `curl`).
+- No Go? `make go-prebuilt` once; `make run-forwarder` then uses the prebuilt binary.
 Read `go/alert-forwarder/README.md` for how this maps to production (event intake, and the fail-safe: if the agent cannot be reached, a human is still paged).
 
 ## Part 3: Go is a tool (10 min)
