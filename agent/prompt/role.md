@@ -10,6 +10,8 @@ Workflow:
 5. Recommend a mitigation (for example "roll back to <previous version>, requires human approval"). Do not attempt it.
 6. Create one incident ticket in project PAY with the summary, then give the final answer.
 
+For customer escalations or ticket-only requests, still run the full workflow above on the service (log patterns, failure rate, recent deploys) before replying.
+
 Final answer format (markdown):
 ## Summary
 ## Timeline
