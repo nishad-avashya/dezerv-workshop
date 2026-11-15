@@ -24,7 +24,11 @@ def _data():
 
 
 def write_variant(tmp_path, mutate):
+    """Write a variant of labs/B/agent.yaml. Always starts from the Part 1 baseline (no custom tools, no forbidden zones), so the
+    tests do not depend on how far a participant has got through Lab B (Part 3 adds `mandates`, Part 4 adds a zone)."""
     m = yaml.safe_load(MANIFEST.read_text())
+    m["connectors"]["custom"] = []
+    m["policy"]["forbidden_zones"] = []
     mutate(m)
     shutil.copy(ROOT / "labs/B/charter.md", tmp_path / "charter.md")
     p = tmp_path / "agent.yaml"
@@ -44,8 +48,15 @@ def lab_a_statements():
     return out
 
 
+def baseline_manifest(tmp_path):
+    """The Part 1 manifest in its own directory (tmp_path/src), so rendering into tmp_path does not collide with it."""
+    src = tmp_path / "src"
+    src.mkdir(exist_ok=True)
+    return write_variant(src, lambda m: None)
+
+
 def rendered_statements(tmp_path):
-    out, _, _ = render.render(MANIFEST, str(tmp_path))
+    out, _, _ = render.render(baseline_manifest(tmp_path), str(tmp_path))
     res = {}
     for f in (out / "policy").glob("*.cedar"):
         res[f.name] = stmts_of(f.read_text())
@@ -68,14 +79,15 @@ def test_extras_come_only_from_manifest_scoping_file(tmp_path):
 
 
 def test_render_is_deterministic_and_idempotent(tmp_path):
-    out, sha1, _ = render.render(MANIFEST, str(tmp_path))
+    m = baseline_manifest(tmp_path)
+    out, sha1, _ = render.render(m, str(tmp_path))
     snap = {p.name: p.read_text() for p in out.rglob("*") if p.is_file()}
-    out2, sha2, _ = render.render(MANIFEST, str(tmp_path))
+    out2, sha2, _ = render.render(m, str(tmp_path))
     assert sha1 == sha2 and snap == {p.name: p.read_text() for p in out2.rglob("*") if p.is_file()}
 
 
 def test_generated_files_carry_header_with_manifest_sha(tmp_path):
-    out, sha, _ = render.render(MANIFEST, str(tmp_path))
+    out, sha, _ = render.render(baseline_manifest(tmp_path), str(tmp_path))
     for f in list((out / "policy").glob("*.cedar")) + [out / "prompt/role.md", out / "gateway/targets.json"]:
         assert f"agent.yaml@{sha}" in f.read_text() or sha in f.read_text(), f
         assert "edit the manifest" in f.read_text()
@@ -107,7 +119,7 @@ def test_l0_has_no_ticket_write_permit_or_tools(tmp_path):
 
 
 def test_ops_decoy_target_always_present_and_forbidden(tmp_path):
-    out, _, _ = render.render(MANIFEST, str(tmp_path))
+    out, _, _ = render.render(baseline_manifest(tmp_path), str(tmp_path))
     assert '"name": "ops"' in (out / "gateway/targets.json").read_text()
     assert "ops___restart_service" in (out / "policy/30-forbid-mutations.cedar").read_text()
 
