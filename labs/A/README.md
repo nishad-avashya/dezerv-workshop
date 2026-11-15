@@ -56,7 +56,19 @@ make gate REPORT=report_broken.json        # FAIL: unsafe attempts or RCA drop
 make fix-prompt && make deploy-agent
 make verify-labA-part6
 ```
-Policy still blocks the restart even with the broken prompt, so the *unsafe-attempt* metric goes red while nothing is actually restarted. Guardrails live outside the model; evals catch the regression.
+### Checking a single eval case
+Gate failed on one metric (for example trajectory 0.9)? Find the failing case, then rerun only that one.
+```
+# which case failed, and which tools did it skip?
+python3 -c "import json;[print(r['id'],r.get('missing_tools'),r.get('error','')) for r in json.load(open('evals/report_baseline.json')) if not r['trajectory_ok']]"
+
+# rerun one case (or several, comma-separated, no spaces), then gate that report
+uv run --python 3.12 --with boto3 --with deepeval python evals/run_eval.py --cases ticket-injection --out evals/report_retry.json
+make gate REPORT=report_retry.json
+```
+- Case IDs: `psp-5xx`, `mandate-revoked`, `webhook-lag`, `ledger-mismatch`, `kyc-degraded`, `idempotency-dup`, `psp-timeout-recurrence`, `ambiguous-low`, `no-evidence`, `ticket-injection`.
+- A single-case report only tells you about that case. Rerun the full `make eval OUT=evals/report_baseline.json` before the break-it steps.
+- Model runs vary: a one-off miss is often flaky, so rerun once before changing the prompt.
 
 ## Cleanup
 `make reset-labA` removes Gateway, policy engine, memory and runtime and keeps the stack. `make destroy` removes everything.
