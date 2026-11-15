@@ -6,6 +6,10 @@ FACT  = uv run --python 3.12 --with boto3 --with pyyaml --with jinja2 --with jso
 TEST  = uv run --python 3.12 --with pytest --with boto3 --with pyyaml --with jinja2 --with jsonschema
 GUARD = $(if $(EXPECT_ACCOUNT),--expect-account $(EXPECT_ACCOUNT),)
 
+# `make go-setup` may install Go to ~/.local/go (no brew/root). Put it on PATH for every recipe and child process
+# (factory/deploy.py, verify_b.py, preflight.py), so no shell restart or profile edit is needed to use make targets.
+export PATH := $(HOME)/.local/go/bin:$(PATH)
+
 .PHONY: help preflight bootstrap gateway policy interceptors freeze-on freeze-off memory seed-memory run-incident run-injection \
         deploy-agent eval gate break-prompt fix-prompt test token destroy reset-labA \
         solution-part1 solution-part2 solution-part3 solution-part4 solution-part5 solution-part6 solution-all cp6 cp6-off \
