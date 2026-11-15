@@ -98,7 +98,8 @@ go-prebuild:    ## (maintainers) build the prebuilt binaries committed under pre
 	bash scripts/go_prebuild.sh
 go-prebuilt:    ## attendees without Go: install the prebuilt forwarder to bin/alert-forwarder
 	bash scripts/go_prebuild.sh --install
-PORT ?= 8090   # forwarder port; 8080 is taken by the workshop editor (override: make run-forwarder PORT=9000)
+# forwarder port; 8080 is taken by the workshop editor (override: make run-forwarder PORT=9000)
+PORT ?= 8090
 run-forwarder:  ## run the Go alert forwarder in this terminal (NAME= for a factory agent, PORT= to change 8090); send the alert from a second terminal
 	bash scripts/run_forwarder.sh "$(NAME)" "$(PORT)"
 

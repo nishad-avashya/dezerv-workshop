@@ -7,7 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
-NAME="${1:-}"; PORT="${2:-8090}"
+NAME="$(echo "${1:-}" | tr -d "[:space:]")"; PORT="$(echo "${2:-8090}" | tr -d "[:space:]")"; PORT="${PORT:-8090}"
+case "$PORT" in (*[!0-9]*) echo "ERROR: PORT must be a number, got '$PORT'" >&2; exit 1;; esac
 export PATH="$HOME/.local/go/bin:$PATH"
 
 state=".labA.json"; [ -n "$NAME" ] && state="agents/$NAME/.state.json"
