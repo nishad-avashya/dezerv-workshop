@@ -132,6 +132,13 @@ The alert is synthetic: `PaymentsFailureRateHigh` on `payments-gw`, "SIP debit f
 Run the same `curl` once more. The session id in the reply is identical, because the alert, service and window are
 the same, so Runtime routes it to the same session.
 
+You can also send a different alert. `data/alerts/` has nine more, all for `payments-gw` (`replay-psp-5xx.json`,
+`replay-webhook-lag.json`, `replay-no-evidence.json` and others). Each is a different incident, so it gets its own
+session id:
+```bash
+curl -X POST localhost:8090/alert -d @data/alerts/replay-psp-5xx.json
+```
+
 ## Verify
 
 Run this after the diagnosis has appeared. You can stop the forwarder in terminal 1 first (++ctrl+c++). Verify starts
@@ -151,10 +158,6 @@ make verify-labB-part2
     Without Go, the first line is `PASS  alert-forwarder binary present (no Go installed)`. The marker is
     `v2.14.3` or `a1f9c3e`. Verify waits up to 10 minutes for the agent.
 
-`make go-test` runs `go vet` and `go test` for both Go modules without AWS. The forwarder tests use a fake invoker
-and cover a stable fingerprint, the happy path, a repeat alert reusing the session, the agent-down fail-safe, bad
-JSON and parsing the region from the ARN.
-
 ## What just happened
 - A Go HTTP handler called the deployed factory agent with `InvokeAgentRuntime` from `aws-sdk-go-v2`, signed with the
   editor's AWS credentials, in the region taken from the runtime ARN.
@@ -164,8 +167,7 @@ JSON and parsing the region from the ARN.
 - The agent itself is unchanged from Part 1. The Gateway, Cedar and interceptor still govern every tool call it makes.
 
 !!! tip "Behind?"
-    `make solution-labB-part2` brings you to the end of this part. It runs `solution-labB-part1` and then
-    `make go-test`, because the forwarder needs no deployment.
+    `make solution-labB-part2` brings you to the end of this part.
 
 ## Troubleshooting
 | Symptom | Fix |
