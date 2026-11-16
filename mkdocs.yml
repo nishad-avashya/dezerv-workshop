@@ -1,0 +1,99 @@
+site_name: Dezerv AgentCore Workshop
+site_description: Hands-on labs for building governed on-call agents on Amazon Bedrock AgentCore
+site_author: Avashya
+# Set to the published Pages URL once the repo is public, e.g. https://<org>.github.io/<repo>/
+# site_url: https://example.github.io/dezerv-workshop/
+repo_url: https://github.com/nishad-avashya/dezerv-workshop
+repo_name: dezerv-workshop
+edit_uri: edit/main/docs/
+copyright: All data in these labs is synthetic. &copy; Avashya, with AWS.
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  palette:
+    - scheme: default
+      primary: custom
+      accent: deep orange
+      toggle: { icon: material/brightness-7, name: Switch to dark mode }
+    - scheme: slate
+      primary: custom
+      accent: deep orange
+      toggle: { icon: material/brightness-4, name: Switch to light mode }
+  font: { text: Open Sans, code: JetBrains Mono }
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.footer
+    - navigation.top
+    - navigation.tracking
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - search.highlight
+    - search.suggest
+
+extra_css:
+  - assets/extra.css
+
+plugins:
+  - search
+  - drawio:
+      toolbar: { pages: false, tags: false, layers: false }
+      edit: false
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc: { permalink: true }
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed: { alternate_style: true }
+  - pymdownx.highlight: { anchor_linenums: true }
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.keys
+  - pymdownx.tasklist: { custom_checkbox: true }
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Introduction:
+      - index.md
+      - Agenda: agenda.md
+      - Architecture: architecture.md
+  - Getting started:
+      - getting-started/index.md
+      - Open your environment: getting-started/environment.md
+      - Bootstrap the account: getting-started/bootstrap.md
+  - "Lab A: Governed on-call agent":
+      - lab-a/index.md
+      - "Part 1: Gateway and tools": lab-a/part-1-gateway.md
+      - "Part 2: Cedar policy": lab-a/part-2-policy.md
+      - "Part 3: Interceptors": lab-a/part-3-interceptors.md
+      - "Part 4: Audit hooks": lab-a/part-4-audit.md
+      - "Part 5: Memory": lab-a/part-5-memory.md
+      - "Part 6: Deploy, evaluate, gate": lab-a/part-6-evals.md
+  - "Lab B: Agent factory and Go":
+      - lab-b/index.md
+      - "Part 1: Render an agent from a manifest": lab-b/part-1-factory.md
+      - "Part 2: A Go service calls the agent": lab-b/part-2-go-forwarder.md
+      - "Part 3: A Go Lambda as a governed tool": lab-b/part-3-go-tool.md
+      - "Part 4: Forbidden zones": lab-b/part-4-forbidden-zones.md
+  - "Capstone: Your squad's agent":
+      - capstone/index.md
+      - Discovery: capstone/discovery.md
+      - "Phase 1: Data and incident": capstone/phase-1-data.md
+      - "Phase 2: Build": capstone/phase-2-build.md
+      - "Phase 3: Prove it and export": capstone/phase-3-prove.md
+      - Demo: capstone/demo.md
+  - Reference:
+      - Catch-up targets: reference/catch-up.md
+      - Troubleshooting: reference/troubleshooting.md
+      - Clean up: reference/cleanup.md

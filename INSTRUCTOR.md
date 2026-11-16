@@ -165,7 +165,7 @@ If IAM blocks the stack: pre-deploy as admin and give attendees the `.env` value
 | `deploy-agent NAME=` stalls, then "policy name ... still in use" | policy names are unique across the **account**; a second agent used a name another agent owns, or a deleted agent's policy still holds it | Fixed in the factory (names are prefixed by product). If you see it, `make destroy-agent` the old agent and wait a minute |
 | Go forwarder returns "agent unavailable" / 404 `No endpoint or agent found` | client region wrong (a stray `AWS_REGION`) | Fixed: the forwarder reads the region from the runtime ARN |
 | Stray `AWS_REGION=us-east-1` in your shell | breaks anything that trusts it | Our scripts ignore `AWS_REGION` and pin us-west-2 (`LAB_REGION` to override); unset it anyway |
-| `go run` leaves a process on the port | `go run` leaves the compiled child alive | `lsof -ti :8080 | xargs kill`; the verify script kills the whole process group |
+| `go run` leaves a process on the port | `go run` leaves the compiled child alive | `lsof -ti :8090 | xargs kill` (the forwarder's default port); the verify script kills the whole process group |
 | Data changed but a tool still returns old data | Lambdas cache data per container | Bootstrap passes a data hash so the Lambdas get fresh containers; re-run `make bootstrap` |
 | Capstone agent cannot see the custom tool | custom tools are hidden unless the caller has `payments/custom.read` | `make bootstrap` once (adds the scope) and re-fetch the token |
 | Lab A `kyc-svc` logs contain capstone lines | the `kyc-svc` capstone profile writes to the same log group | Harmless for the labs; use another profile if it matters |

@@ -1,0 +1,8 @@
+:root { --md-primary-fg-color: #232f3e; --md-primary-fg-color--light: #37475a; --md-primary-fg-color--dark: #161e2d; }
+[data-md-color-scheme="slate"] { --md-primary-fg-color: #161e2d; }
+.md-typeset .mxgraph { margin: 1em auto; background: #fff; border-radius: 6px; }
+.md-typeset .admonition.time, .md-typeset details.time { border-color: #ff9900; }
+.md-typeset .time > .admonition-title, .md-typeset .time > summary { background-color: rgba(255,153,0,.1); }
+.md-typeset .time > .admonition-title::before, .md-typeset .time > summary::before { background-color: #ff9900;
+  -webkit-mask-image: var(--md-admonition-icon--time); mask-image: var(--md-admonition-icon--time); }
+:root { --md-admonition-icon--time: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16m0-18a10 10 0 1 1 0 20 10 10 0 0 1 0-20m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"/></svg>'); }

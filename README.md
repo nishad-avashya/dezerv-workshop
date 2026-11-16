@@ -8,6 +8,8 @@ Hands-on labs for the Dezerv *Diving Deep with Amazon Bedrock AgentCore* worksho
 | **B** | Agent factory (`agent.yaml` renders prompt, Gateway targets, Cedar, memory, eval gates) + a Go service that calls the agent + a Go Lambda tool | built; Parts 1-4 verified in a real account (`labs/B/README.md`). Stretch S1/S2 not built |
 | **Capstone** | Each squad builds an on-call agent for its own service from a profile or its own schema; checkpoints C1-C3; export | built; one profile (`kyc-svc`) run end to end, all five generate and render (`labs/capstone/README.md`) |
 
+**Attendee guide (website):** `docs/` is a Workshop Studio-style MkDocs site with concepts, draw.io diagrams and expected outputs, published to GitHub Pages by `.github/workflows/docs.yml`. Preview it with `uv run --python 3.12 --with-requirements requirements-docs.txt mkdocs serve`; authoring rules are in `CONTRIBUTING-DOCS.md`.
+
 Instructors start with **`INSTRUCTOR.md`** (resource inventory, run of show, Q&A, troubleshooting, Lab B and capstone internals). Attendees start with `labs/A/README.md`, then `labs/B/README.md`, then `labs/capstone/README.md`. Claude Code reads `CLAUDE.md`. Spike results and deviations from the spec are in `FINDINGS.md`.
 
 ## Quick start (Lab A)

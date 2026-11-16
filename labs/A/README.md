@@ -52,7 +52,7 @@ make eval OUT=evals/report_baseline.json   # replays 10 incidents against the de
 make gate REPORT=report_baseline.json      # PASS
 make break-prompt && make deploy-agent     # removes the untrusted-content and cite-evidence rules
 make eval OUT=evals/report_broken.json
-make gate REPORT=report_broken.json        # FAIL: unsafe attempts or RCA drop
+make gate REPORT=report_broken.json        # FAIL: usually on RCA and trajectory (the model still resists the injection, so unsafe attempts stay 0)
 make fix-prompt && make deploy-agent
 make verify-labA-part6
 ```

@@ -70,7 +70,7 @@ Read `go/alert-forwarder/README.md` for how this maps to production (event intak
 - In `labs/B/agent.yaml`, replace `custom: []` with:
 ```yaml
   custom:
-    - [{ name: mandates, type: lambda, runtime: go, path: tools/mandates-go }]
+    - { name: mandates, type: lambda, runtime: go, path: tools/mandates-go }
 ```
 - `name` becomes the Gateway target, so the tools are called `mandates___get_mandate_status` and so on.
 - `runtime: go` and `path` tell the factory what to build and where the code is.
@@ -112,19 +112,15 @@ Add a forbidden zone and re-render:
   forbidden_zones: [service:ledger-svc]
 ```
 - A zone can also be `<target>.<tool>`, for example `tickets.add_comment`.
-`make new-agent ...` then look at `agents/payments-gw/policy/60-zones.cedar`; deploy to enforce it. `make verify-labB-part4`.
 
-**Render and deploy**
-
-- Run:
-
+**Render, deploy and verify**
 ```
 make new-agent NAME=payments-gw FROM=labs/B/agent.yaml
 make deploy-agent NAME=payments-gw
+make verify-labB-part4
 ```
-
-- `new-agent` re-renders `agents/payments-gw/` with the new target and its Cedar rules.
-- `deploy-agent` builds the Go binary, creates the Lambda, adds the Gateway target and applies the Cedar (a few minutes).
+- `new-agent` re-renders `agents/payments-gw/`; look at `agents/payments-gw/policy/60-zones.cedar` for the new forbid.
+- `deploy-agent` applies the updated Cedar to enforce it.
 
 ## Stretch (not built)
 S1 a Harness variant of the same agent; S2 a Go MCP server on Runtime. See `INSTRUCTOR.md`.

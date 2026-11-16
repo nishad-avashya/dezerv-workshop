@@ -40,3 +40,4 @@ node_modules/
 agent/prompt/*.orig
 tests/_tmp_replay/
 # prebuilt/ IS committed on purpose: fallback binaries for editors without Go (rebuild with make go-prebuild)
+site/

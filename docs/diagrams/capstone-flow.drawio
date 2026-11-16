@@ -1,0 +1,133 @@
+<mxfile host="drawio" agent="dezerv-workshop">
+  <diagram id="capstone-flow" name="Capstone flow">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="660" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Capstone: 90 minutes = 65 min build + 25 min demos (running example SQUAD=kyc PROFILE=kyc-svc)" style="text;html=1;fontSize=13;fontStyle=1;fontColor=#232F3E;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="1100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" value="1. Discovery and data  ·  minutes 0-25" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF1E7;strokeColor=#ED7100;verticalAlign=top;align=left;spacingLeft=12;fontStyle=1;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="30" y="50" width="1190" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="l1s0" value="&lt;b&gt;Discovery (10 min)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Claude Code asks the 7 questions; service sheet&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="95" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l1s1" value="&lt;b&gt;Profile or schema&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;PROFILE=kyc-svc&lt;br&gt;or SCHEMA=my-service.yaml&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="250" y="95" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l1e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l1s0" target="l1s1">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l1s2" value="&lt;b&gt;make new-squad&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;squads/kyc/: data, alert, injection ticket, 3 replay cases, tool scaffold&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="450" y="95" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l1e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l1s1" target="l1s2">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l1s3" value="&lt;b&gt;make provision-squad&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;S3 data, log backfill, ticket PAY-9xxx&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="650" y="95" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l1e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l1s2" target="l1s3">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l1s4" value="&lt;b&gt;Edit charter.md&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Purpose, SLOs, Invariants, Forbidden zones, Escalation&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="850" y="95" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l1e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l1s3" target="l1s4">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l1cp" value="&lt;b&gt;C1  ~25 min&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;verify-capstone CHECK=C1&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;manifest, charter, data, alert&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#232F3E;strokeColor=#232F3E;fontColor=#FFFFFF;fontSize=11;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="100" width="145" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="l1ecp" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l1s4" target="l1cp">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l1down" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="l1cp" target="l2s0">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1132" y="215" /><mxPoint x="20" y="215" /><mxPoint x="20" y="317" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l2" value="2. Build  ·  minutes 25-50" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F6F7;strokeColor=#01A88D;verticalAlign=top;align=left;spacingLeft=12;fontStyle=1;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="30" y="230" width="1190" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="l2s0" value="&lt;b&gt;make new-agent&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;FROM=squads/kyc/agent.yaml&lt;br&gt;prompt, targets, Cedar, memory, gates&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#01A88D;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="275" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l2s1" value="&lt;b&gt;make deploy-agent&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;NAME=kyc-svc&lt;br&gt;Lambdas, Gateway, policy engine, memory, Runtime&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#01A88D;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="250" y="275" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l2e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l2s0" target="l2s1">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l2s2" value="&lt;b&gt;Custom tool&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;edit tools/get_kyc_request/handler.py (optional: make new-tool)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#01A88D;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="450" y="275" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l2e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l2s1" target="l2s2">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l2s3" value="&lt;b&gt;Forbidden zones&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;policy.forbidden_zones in agent.yaml, re-render, redeploy&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#01A88D;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="650" y="275" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l2e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l2s2" target="l2s3">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l2s4" value="&lt;b&gt;Run the incident&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;alert in, diagnosis with citations out&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#01A88D;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="850" y="275" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l2e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l2s3" target="l2s4">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l2cp" value="&lt;b&gt;C2  ~50 min&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;verify-capstone CHECK=C2&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;READY, tool listed, root-cause marker&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#232F3E;strokeColor=#232F3E;fontColor=#FFFFFF;fontSize=11;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="280" width="145" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="l2ecp" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l2s4" target="l2cp">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l2down" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="l2cp" target="l3s0">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1132" y="395" /><mxPoint x="20" y="395" /><mxPoint x="20" y="497" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l3" value="3. Prove it  ·  minutes 50-65" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF4E5;strokeColor=#FF9900;verticalAlign=top;align=left;spacingLeft=12;fontStyle=1;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="30" y="410" width="1190" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="l3s0" value="&lt;b&gt;Replay cases&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;3 generated + at least 1 of your own in squads/kyc/replay/&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FF9900;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="455" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l3s1" value="&lt;b&gt;make eval&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;NAME=kyc-svc&lt;br&gt;report.json&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FF9900;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="250" y="455" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l3e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l3s0" target="l3s1">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l3s2" value="&lt;b&gt;make gate&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;NAME=kyc-svc&lt;br&gt;RCA, trajectory, unsafe, PII&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FF9900;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="450" y="455" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l3e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l3s1" target="l3s2">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l3s3" value="&lt;b&gt;make prove-denial&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;SQUAD=kyc&lt;br&gt;a denied decision in the audit log&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FF9900;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="650" y="455" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l3e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l3s2" target="l3s3">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l3s4" value="&lt;b&gt;make export&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;SQUAD=kyc&lt;br&gt;exports/kyc-agent-skeleton.zip&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FF9900;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="850" y="455" width="175" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l3e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l3s3" target="l3s4">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="l3cp" value="&lt;b&gt;C3  ~65 min&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;verify-capstone CHECK=C3&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;replay, gate, denial, zip&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#232F3E;strokeColor=#232F3E;fontColor=#FFFFFF;fontSize=11;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="460" width="145" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="l3ecp" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;" edge="1" parent="1" source="l3s4" target="l3cp">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="demo" value="&lt;b&gt;4. Demos  ·  minutes 65-90&lt;/b&gt;  ·  5 minutes per squad, script in DEMO.md inside the zip  ·  download the zip before the account expires (72 h)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F2EEFB;strokeColor=#8C4FFF;fontSize=12;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="590" width="1190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l3down" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;strokeColor=#232F3E;fontSize=10;exitX=0.5;exitY=1;entryX=0.9;entryY=0;" edge="1" parent="1" source="l3cp" target="demo">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1132" y="575" /><mxPoint x="1101" y="575" /></Array></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
