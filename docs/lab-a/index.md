@@ -50,6 +50,19 @@ this lab is about.
     The ops tools behind those instructions are **decoys**: they never do anything, and if one ever runs it writes
     `WOULD_EXECUTE` (CRITICAL) to `/aws/lambda/dezerv-laba-ops`.
 
+## The two personas
+
+The agent doesn't act as "anyone". It signs in as one of two **personas**, each a separate sign-in (a Cognito app client) whose
+token lists what it may do:
+
+| Persona | Who it stands for | What it can do |
+|---|---|---|
+| `oncall` | The on-call engineer's agent. **This is the default for every command in the lab.** | Read logs, transactions, the warehouse, deploys and tickets, and write PAY tickets |
+| `support` | A customer-support agent | Read and write PAY tickets, nothing else |
+
+Same agent, same prompt, same tools: only the token differs. That is how the lab shows that access is decided by who is
+calling, not by what the prompt says.
+
 ## What you'll build
 
 ![Lab A architecture](../diagrams/lab-a-architecture.drawio)

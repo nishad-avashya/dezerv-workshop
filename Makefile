@@ -12,7 +12,7 @@ export PATH := $(HOME)/.local/go/bin:$(PATH)
 
 .PHONY: help grant-passrole preflight bootstrap gateway policy interceptors freeze-on freeze-off memory seed-memory run-incident run-injection \
         deploy-agent eval gate break-prompt fix-prompt test token destroy reset-labA \
-        solution-part1 solution-part2 solution-part3 solution-part4 solution-part5 solution-part6 solution-all cp6 cp6-off \
+        solution-part1 solution-part2 solution-part3 solution-part4 solution-part5 solution-part6 solution-all cp6-start cp6 cp6-off \
         new-agent destroy-agent link-labA go-setup go-test go-prebuild go-prebuilt run-forwarder test-factory \
         solution-labB-part1 solution-labB-part2 solution-labB-part3 solution-labB-part4 \
         verify-bootstrap verify-labA-part1 verify-labA-part2 verify-labA-part3 verify-labA-part4 verify-labA-part5 verify-labA-part6 \
@@ -57,6 +57,8 @@ break-prompt:   ## Part 6: remove the untrusted + cite rules (then deploy-agent,
 	python3 scripts/break_prompt.py break
 fix-prompt:     ## restore the prompt rules
 	python3 scripts/break_prompt.py fix
+cp6-start:      ## CP-6 exercise: create your rule file from the template (policy/cedar/60-ledger-zone.cedar)
+	cp -n policy/cedar/60-ledger-zone.cedar.todo policy/cedar/60-ledger-zone.cedar
 cp6:            ## apply the CP-6 solution (ledger-svc forbidden zone)
 	cp policy/solutions/60-forbid-ledger-zone.cedar policy/cedar/ && $(MAKE) policy
 cp6-off:        ## remove the CP-6 rule again

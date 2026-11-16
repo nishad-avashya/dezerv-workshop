@@ -19,8 +19,7 @@ name (`AgentCore::Action::"ops___restart_service"`), and the resource is the Gat
 available as `context.input`.
 
 Cedar **denies by default**: a call is allowed only if some `permit` matches and no `forbid` matches. A matching
-`forbid` always wins, whatever any `permit` says. That is why Dezerv's core rule is a single unconditional `forbid`
-in `policy/cedar/30-forbid-mutations.cedar`: nobody, under any scope, may restart, scale or roll back.
+`forbid` always wins, whatever any `permit` says. The policies are in `policy/cedar/`.
 
 **Scopes come from the JWT.** The Cognito token's space-separated `scope` claim is exposed to Cedar as the principal tag
 `scope`, so a rule reads it with `principal.hasTag("scope") && principal.getTag("scope") like "*db.read*"`.
@@ -33,15 +32,18 @@ Always check `hasTag` before `getTag`. The two personas get these scopes:
 
 ![Personas, scopes and Cedar](../diagrams/lab-a-cedar.drawio)
 
-The pack in `policy/cedar/` (11 policies; `{{GATEWAY_ARN}}` is filled in when it is applied):
+The policies are in `policy/cedar/` (11 policies; `{{GATEWAY_ARN}}` is filled in when it is applied). Each one has a **CP**
+number (Cedar Policy), which the rest of this lab uses.
 
-| File | Rule | Teaching point |
-|---|---|---|
-| `10-permit-reads.cedar` (CP-1, 5 policies) | permit each read tool when the matching `*.read` scope is present | default deny; scopes as tags |
-| `20-permit-ticket-writes.cedar` (CP-2) | permit `create_ticket` / `add_comment` with `tickets.write` **and** `context.input.project == "PAY"` | conditions on tool input |
-| `30-forbid-mutations.cedar` (CP-3) | **forbid** restart, scale, rollback for every principal | forbid beats permit |
-| `40-forbid-unbounded.cedar` (CP-4) | forbid `find_transactions` / `query_logs` when `limit > 200` | guard input reads with `has` |
-| `50-support-no-data.cedar` (CP-5, 3 policies) | forbid db, logs and warehouse tools *unless* the read scope is present | explicit deny that fails closed if the tag is missing |
+??? info "All policies: CP-1 to CP-6"
+    | File | Rule | Teaching point |
+    |---|---|---|
+    | `10-permit-reads.cedar` (CP-1, 5 policies) | permit each read tool when the matching `*.read` scope is present | default deny; scopes as tags |
+    | `20-permit-ticket-writes.cedar` (CP-2) | permit `create_ticket` / `add_comment` with `tickets.write` **and** `context.input.project == "PAY"` | conditions on tool input |
+    | `30-forbid-mutations.cedar` (CP-3) | **forbid** restart, scale, rollback for every principal | forbid beats permit |
+    | `40-forbid-unbounded.cedar` (CP-4) | forbid `find_transactions` / `query_logs` when `limit > 200` | guard input reads with `has` |
+    | `50-support-no-data.cedar` (CP-5, 3 policies) | forbid db, logs and warehouse tools *unless* the read scope is present | explicit deny that fails closed if the tag is missing |
+    | `60-ledger-zone.cedar.todo` (CP-6, the exercise in step 4) | forbid `get_recent_deploys` for `ledger-svc`, the forbidden zone | write your own `forbid` for a service |
 
 **Denials name the policy.** A denied call comes back as JSON-RPC error `-32002` with a message like
 `Tool Execution Denied ... denied due to P30_forbid_mutations_1`. The policy name is derived from the file
@@ -76,7 +78,7 @@ make policy
     part happens before attachment, so there is no gap. Comment lines are stripped before upload for the same reason.
 
 ### 2. Retry the restart
-Run the same call that went through in Part 1:
+Run the same call that went through in Part 1, the direct `restart_service` call on `payments-gw`:
 ```bash
 uv run --python 3.12 python scripts/mcp_cli.py call ops___restart_service '{"service":"payments-gw"}'
 ```
@@ -121,12 +123,13 @@ so and escalate (the prompt tells it to escalate rather than guess). Compare tha
 same agent, same prompt, same Gateway; only the token differs.
 
 ### 4. Exercise: declare a forbidden zone (CP-6)
-Dezerv squads declare **forbidden zones**: services an agent must never look at. Write one: the agent may read deploys
-for `payments-gw` and `kyc-svc`, but never for `ledger-svc`.
+In production, every squad will want its agent to see only the services it owns, and to stay away from sensitive ones such as
+the ledger. A **forbidden zone** is how a squad draws that line in policy instead of trusting the prompt. Write one: the agent
+may read deploys for `payments-gw` and `kyc-svc`, but never for `ledger-svc`.
 
-1. Rename the template so it is picked up (`make policy` only reads `*.cedar`):
+1. Create your rule file from the template:
     ```bash
-    mv policy/cedar/60-ledger-zone.cedar.todo policy/cedar/60-ledger-zone.cedar
+    make cp6-start
     ```
 2. Edit `policy/cedar/60-ledger-zone.cedar`: uncomment the `forbid(...)` block and replace `/* TODO */` with a condition
    on the `service` input. Two analyzer rules learned in testing: guard every input read
