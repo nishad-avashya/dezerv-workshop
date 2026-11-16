@@ -51,6 +51,11 @@ make new-agent NAME=payments-gw FROM=labs/B/agent.yaml
     ```
     The sha is `8404c89fdf` only if your manifest is identical to `labs/B/solutions/agent.part4.yaml`.
 
+!!! note "Where the file is"
+    The Cedar files are written to `agents/payments-gw/policy/`, under the repo root (the folder with the `Makefile`),
+    not under `labs/B/`. Each render deletes and rewrites them, so a missing or deleted `60-zones.cedar` is recreated.
+    If your editor shows it empty or stale, refresh the file tree.
+
 `agents/payments-gw/policy/60-zones.cedar` now has 5 statements instead of 4. This one is new:
 
 ```cedar title="agents/payments-gw/policy/60-zones.cedar (new statement)"
