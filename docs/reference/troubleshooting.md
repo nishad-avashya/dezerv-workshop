@@ -6,6 +6,48 @@ Start with the exact error text. Each lab page has its own troubleshooting secti
     The workshop role is more restrictive than expected. **Stop**, note the denied action and tell the instructor.
     Don't widen permissions or work around IAM.
 
+## Claude Code
+
+### Claude Code fails with an AWS authentication error
+
+```text
+AWS authentication failed · refresh your AWS credentials (SSO sign-in, access keys, API key or proxy
+token) and retry · if credentials are current, check AWS permissions and model access · API Error:
+403 {"Message":"User: arn:aws:sts::<account>:assumed-role/WSParticipantRole/Participant is not
+authorized to perform: bedrock:InvokeModelWithResponseStream on resource:
+arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-5 because no identity-based
+policy allows the bedrock:InvokeModelWithResponseStream action"}
+```
+
+**Cause:** Claude Code is running in a terminal that has the `WSParticipantRole` credentials pasted in. That role can run the labs but isn't allowed to call the Bedrock model. Claude Code works from a terminal on the default `CodeEditorInstanceRole`.
+
+**Fix:**
+
+1. Exit Claude Code.
+2. Open a **new terminal**. It starts on `CodeEditorInstanceRole`. Do not paste the credentials.
+3. Check the role:
+
+    ```bash
+    aws sts get-caller-identity   # the Arn should contain CodeEditorInstanceRole
+    ```
+
+4. Start Claude Code again from `~/dezerv`.
+
+Keep a second terminal with the `WSParticipantRole` credentials pasted for the `make` commands.
+
+If the error still appears on `CodeEditorInstanceRole`, tell the instructor with the exact error text.
+
+## Cost breach error
+
+When the account goes over its cost limit, commands and Claude Code start failing with IAM errors (`AccessDenied`, `not authorized to perform ...`), even though they worked before.
+
+**Fix:** do the [IAM setup from the environment steps](../getting-started/environment.md#4-set-up-the-iam-role) again:
+
+1. In a new terminal on `CodeEditorInstanceRole` (no credentials pasted), run `make grant-passrole`.
+2. Open another new terminal, paste the `WSParticipantRole` credentials from the workspace home page, and check with `aws sts get-caller-identity`.
+
+If it still fails, tell the instructor with the exact error text.
+
 ## Setup
 
 | Symptom | Cause | Fix |

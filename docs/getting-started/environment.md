@@ -5,8 +5,19 @@
 ## 1. Open the Code Editor
 
 Your instructor gives you an event link and an access code for the AWS workshop.
-Join the event, then open the **Code Editor** from the event dashboard, as the AWS workshop instructs.
-It is a browser IDE that already has AWS credentials for your workshop account, plus Claude Code, the AgentCore CLI and the `aws-agents` skills.
+Join the event, then open the **Feature Deep Dive** workspace from the event dashboard.
+It is a browser Code Editor that already has AWS credentials for your workshop account, plus Claude Code, the AgentCore CLI and the `aws-agents` skills.
+
+!!! info "Two workspaces, one machine"
+    Every participant has two workspaces: **Feature Deep Dive** and **Build With Skills**.
+    They run on the same EC2 machine but hold different files, and both have Claude Code installed.
+
+    | Workspace | Used for |
+    |---|---|
+    | Feature Deep Dive | [Lab A](../lab-a/index.md) |
+    | Build With Skills | [Lab B](../lab-b/index.md) |
+
+    Each lab has a folder with a `README.md` that says how to run it (`labs/A/README.md`, `labs/B/README.md`). Both labs use pre-built `make` commands.
 
 !!! info "One account per squad"
     Each squad gets its own workshop account, which is deleted 72 hours after the event.
@@ -49,7 +60,28 @@ bash bootstrap.sh
 !!! warning "No root and no passwordless sudo?"
     `bootstrap.sh` stops with `cannot install make curl`. Tell your instructor; don't try to work around it.
 
-## 4. Point Claude Code at the labs
+## 4. Set up the IAM role
+
+`make bootstrap` needs `WSParticipantRole` to be able to pass the Lab A roles to Lambda and AgentCore. Grant that once, from a new terminal (it starts with the default `CodeEditorInstanceRole`):
+
+```bash
+cd ~/dezerv
+export EXPECT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+make grant-passrole
+```
+
+Then switch to `WSParticipantRole`: open a new terminal, paste the credentials `export` command from the workspace home page, and check:
+
+```bash
+aws sts get-caller-identity   # the Arn should contain WSParticipantRole
+```
+
+!!! important "`WSParticipantRole` is the role for lab commands"
+    Every `make` command in the labs runs as `WSParticipantRole`. The credentials belong to the terminal, so **paste the `export` command again in every new terminal**. A new terminal starts as `CodeEditorInstanceRole`.
+
+    **Claude Code needs the opposite: a terminal on `CodeEditorInstanceRole`.** `WSParticipantRole` can't call the model. If Claude Code stops with an IAM error, see [Troubleshooting](../reference/troubleshooting.md#claude-code-fails-with-an-aws-authentication-error).
+
+## 5. Point Claude Code at the labs
 
 Start Claude Code in the repo and give it this prompt:
 

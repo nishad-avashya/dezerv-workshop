@@ -19,11 +19,13 @@
 
 ### 1. Pin the account
 
-Every script refuses to run if your credentials are for a different account. Find your account id and export it:
+!!! warning "Be on `WSParticipantRole`, with the PassRole policy granted"
+    Bootstrap fails on `WSParticipantRole` until [the `PassLabARoles` policy is granted](environment.md#4-set-up-the-iam-role). Check with `aws sts get-caller-identity` that your `Arn` contains `WSParticipantRole`.
+
+Every script refuses to run if your credentials are for a different account. Export your account id from your credentials:
 
 ```bash
-aws sts get-caller-identity --query Account --output text
-export EXPECT_ACCOUNT=<12-digit account id>
+export EXPECT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 ```
 
 ### 2. Run preflight
@@ -107,11 +109,11 @@ make bootstrap && make verify-bootstrap
 
 ## Using a second editor?
 
-The AWS Track 2 uses a different Code Editor. If it is in the same account, clone the repo there and run `make link-labA` instead of bootstrapping again. It rebuilds `.env` from the existing stack and redeploys nothing.
+The Build With Skills workspace has different files from Feature Deep Dive (same machine, same account). Clone the repo there and run `make link-labA` instead of bootstrapping again. It rebuilds `.env` from the existing stack and redeploys nothing.
 
 ```bash
 git clone https://github.com/nishad-avashya/dezerv-workshop.git ~/dezerv && cd ~/dezerv
-export EXPECT_ACCOUNT=<12-digit account id>
+export EXPECT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 make link-labA
 ```
 

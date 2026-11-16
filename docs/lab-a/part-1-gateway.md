@@ -18,7 +18,7 @@ Behind it sit **targets**; here every target is an AWS Lambda function with an i
 
 The Gateway names every tool `<target>___<tool>` (three underscores). The `db` target's `find_transactions` tool
 becomes `db___find_transactions`. The same name reaches the Lambda in its client context
-(`bedrockAgentCoreToolName`), and in Part 2 it becomes the Cedar **action**. Six targets, fourteen tools:
+(`bedrockAgentCoreToolName`). Six targets, fourteen tools:
 
 | Target | Tools | Backed by (all synthetic) |
 |---|---|---|
@@ -35,11 +35,11 @@ Every tool reply carries `source`, `query` and `as_of`, so the agent can cite wh
 accepts tokens from two app clients only: `oncall` and `support`. The agent gets a client-credentials token and sends
 it as `Authorization: Bearer <jwt>` on every MCP request. The token's `scope` claim says what the persona may do,
 but **in Part 1 nothing reads the scopes yet**: any authenticated caller may call any tool, including the decoy
-`ops___restart_service`. That gap is what Part 2 closes.
+`ops___restart_service`.
 
 ![Life of one tool call](../diagrams/lab-a-tool-call-flow.drawio)
 
-The diagram shows the full path you will have by the end of Part 3. Right now only steps 1 (validate the JWT) and
+The diagram shows the full path of a tool call. Right now only steps 1 (validate the JWT) and
 4 (run the Lambda) exist.
 
 ## Steps
@@ -101,13 +101,17 @@ make run-incident
     ## Recommended next step (needs human approval)
     Roll back payments-gw to v2.14.2 ... requires human approval. Ticket PAY-... created.
     ```
-    `(no memory configured)` is expected until Part 5.
+    `(no memory configured)` is expected.
 
 Look for: root cause `v2.14.3` / `a1f9c3e` / `psp/client.go:88`, impact of about 340 transactions, a PAY ticket, and
 a rollback **recommendation** (not an action).
 
 ### 4. Show the problem: nothing stops a restart
-Call the decoy restart tool directly, as the `oncall` persona, with no policy in place:
+The agent you just ran only diagnoses, but nothing in the Gateway stops it from doing more. It can see a `restart_service` tool, and
+the prompt telling it not to use it is only a hint. If a hidden instruction in a ticket or log line convinces the agent to call
+it, a real restart would go straight through to production.
+
+Try it. Call the decoy restart tool directly, as the `oncall` persona, with no policy in place:
 ```bash
 uv run --python 3.12 python scripts/mcp_cli.py call ops___restart_service '{"service":"payments-gw"}'
 ```
@@ -124,15 +128,12 @@ uv run --python 3.12 python scripts/mcp_cli.py call ops___restart_service '{"ser
      }
     }
     ```
-It **succeeds**. The decoy does nothing, but it also writes a `WOULD_EXECUTE` line to `/aws/lambda/dezerv-laba-ops`:
-had this been a real restart tool, a prompt injection would have been one tool call away from production.
+The call **went through**: the Gateway let the request reach the tool, and nothing stopped it. The proof is the
+`WOULD_EXECUTE` line the tool logged to `/aws/lambda/dezerv-laba-ops`.
 
-!!! warning "This call only works before Part 2"
-    Once `make policy` has attached Cedar, the same command prints `ERROR` and a JSON-RPC error `-32002`
-    ("Tool Execution Denied ... denied due to P30_forbid_mutations_1"), and `mcp_cli.py list` no longer shows the
-    three `ops___*` tools at all. If you are already past Part 2, that is the result you should see.
-    The `WOULD_EXECUTE` line written now does not affect later checks: `make verify-labA-part3` only counts lines
-    written during its own run.
+!!! note "Why does it say `executed: false`?"
+    That field is only the decoy saying "I'm a stand-in, nothing real happened". It doesn't mean the call was blocked.
+    A real restart tool would have restarted the service.
 
 ## Verify
 ```bash
@@ -151,18 +152,13 @@ make verify-labA-part1
 
 ## What just happened
 - One Gateway (`dezerv-laba-gw`) now fronts six Lambda targets and 14 tools; the agent only knows one MCP URL.
-- Tool names are `<target>___<tool>`; that string is what Cedar will match in Part 2.
+- Tool names are `<target>___<tool>`.
 - The Gateway checked the Cognito JWT on every call, so only the `oncall` and `support` clients get in.
 - Authentication is not authorization: an authenticated caller could still call `ops___restart_service`.
 
 !!! question "Discuss"
     The model correctly *recommended* a rollback and did not attempt one. Why is that not good enough for Dezerv?
-    What would happen with a weaker model, a different prompt, or the injected ticket you will meet in Part 3?
+    What would happen with a weaker model, a different prompt, or a ticket with a hidden instruction in it?
 
 !!! tip "Behind?"
     `make solution-part1` brings you to the end of this part (it runs `bootstrap` and `gateway`).
-
-## Troubleshooting
-- **Gateway 5xx right after create:** the targets were not READY yet. `make gateway` waits for READY; re-run it.
-- **Agent cites no logs:** usually a stale `.env` (wrong `LAB_ANCHOR`). Re-run `make bootstrap` on the day.
-- **`RATE_LIMITED`** does not apply yet (no interceptor); it appears from Part 3.

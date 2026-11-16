@@ -60,7 +60,7 @@ It should end with `found gateway_id, policy_engine_id, memory_id, runtime_id`.
     The Build with Skills editor is a separate machine in the **same account**. Clone the repo there, then:
 
     ```bash
-    export EXPECT_ACCOUNT=<12-digit workshop account id>
+    export EXPECT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
     make link-labA
     ```
 

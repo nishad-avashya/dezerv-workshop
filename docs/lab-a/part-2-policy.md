@@ -10,9 +10,11 @@
 
 ## Concepts
 
-Part 1 ended with an authenticated agent that could call anything. Cedar fixes that. A **policy engine** is attached
-to the Gateway in `ENFORCE` mode; for every tool call the Gateway asks it whether this **principal** may perform this
-**action** on this **resource**. The principal is the caller (type `AgentCore::OAuthUser`), the action is the tool
+In Part 1 the restart went through because the Gateway only checked *who* was calling, not *what they were allowed to do*.
+Cedar adds that second check, and it runs outside the model, so no prompt or hidden instruction can talk its way past it.
+
+A **policy engine** is attached to the Gateway in `ENFORCE` mode; for every tool call the Gateway asks it whether this
+**principal** may perform this **action** on this **resource**. The principal is the caller (type `AgentCore::OAuthUser`), the action is the tool
 name (`AgentCore::Action::"ops___restart_service"`), and the resource is the Gateway itself. Tool arguments are
 available as `context.input`.
 
@@ -43,7 +45,7 @@ The pack in `policy/cedar/` (11 policies; `{{GATEWAY_ARN}}` is filled in when it
 
 **Denials name the policy.** A denied call comes back as JSON-RPC error `-32002` with a message like
 `Tool Execution Denied ... denied due to P30_forbid_mutations_1`. The policy name is derived from the file
-(`30-forbid-mutations.cedar`, statement 1). The audit hook in Part 4 copies that name into its `decision.reason`.
+(`30-forbid-mutations.cedar`, statement 1).
 
 **Forbidden tools are hidden.** With the engine attached, the Gateway also filters `tools/list`: tools the caller can
 never use are not listed. The `oncall` agent sees 11 tools, not 14; it cannot even *see* `restart_service`.
@@ -74,7 +76,7 @@ make policy
     part happens before attachment, so there is no gap. Comment lines are stripped before upload for the same reason.
 
 ### 2. Retry the restart
-The same call that succeeded in Part 1:
+Run the same call that went through in Part 1:
 ```bash
 uv run --python 3.12 python scripts/mcp_cli.py call ops___restart_service '{"service":"payments-gw"}'
 ```
@@ -86,14 +88,15 @@ uv run --python 3.12 python scripts/mcp_cli.py call ops___restart_service '{"ser
      "message": "Tool Execution Denied ... denied due to P30_forbid_mutations_1"
     }
     ```
-The call never reaches the Lambda, so no new `WOULD_EXECUTE` line is written. List the tools again: the three `ops___*`
-tools are gone.
+This time the `ERROR` is the good result: Cedar denied the call and named the policy that did it. The call never reaches
+the Lambda, so no new `WOULD_EXECUTE` line is written. List the tools again: the three `ops___*` tools are gone, so the agent
+can't even see them.
 ```bash
 uv run --python 3.12 python scripts/mcp_cli.py list
 ```
 
 ### 3. Compare the personas
-Now look at what the `support` persona can see. Its token carries only the two ticket scopes, so every data tool is
+Same Gateway, different caller. Look at what the `support` persona can see. Its token carries only the two ticket scopes, so every data tool is
 either forbidden (CP-5) or never permitted.
 ```bash
 uv run --python 3.12 python scripts/mcp_cli.py list --persona support
@@ -158,7 +161,7 @@ for `payments-gw` and `kyc-svc`, but never for `ledger-svc`.
 !!! note "Why not 'forbid unbounded transaction searches'?"
     The original exercise idea was to forbid `find_transactions` when the filter has no time bound. Cedar cannot
     express it: `filter` is a free-form MongoDB object and Cedar cannot look inside it. A good question for the room:
-    what is Cedar good for, and what belongs in the tool itself? (Lab B renders zone rules like this one from a manifest.)
+    what is Cedar good for, and what belongs in the tool itself?
 
 ## Verify
 ```bash
@@ -195,8 +198,3 @@ make verify-labA-part2
 
 !!! tip "Behind?"
     `make solution-part2` brings you to the end of this part.
-
-## Troubleshooting
-- **Everything allowed after a policy edit:** the engine is detached, for example after a failed apply. Run `make policy`; it re-attaches.
-- **`UPDATE_FAILED` / "Overly Restrictive":** an analyzer rejection; see the info box above and `FINDINGS.md`. Check the rule shape and re-run `make policy`.
-- **`ConflictException ... already exists`:** a policy deleted a moment ago still holds its name. The script retries; re-run if it gives up.

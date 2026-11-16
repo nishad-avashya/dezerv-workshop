@@ -10,7 +10,7 @@ GUARD = $(if $(EXPECT_ACCOUNT),--expect-account $(EXPECT_ACCOUNT),)
 # (factory/deploy.py, verify_b.py, preflight.py), so no shell restart or profile edit is needed to use make targets.
 export PATH := $(HOME)/.local/go/bin:$(PATH)
 
-.PHONY: help preflight bootstrap gateway policy interceptors freeze-on freeze-off memory seed-memory run-incident run-injection \
+.PHONY: help grant-passrole preflight bootstrap gateway policy interceptors freeze-on freeze-off memory seed-memory run-incident run-injection \
         deploy-agent eval gate break-prompt fix-prompt test token destroy reset-labA \
         solution-part1 solution-part2 solution-part3 solution-part4 solution-part5 solution-part6 solution-all cp6 cp6-off \
         new-agent destroy-agent link-labA go-setup go-test go-prebuild go-prebuilt run-forwarder test-factory \
@@ -23,6 +23,8 @@ help:           ## list targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*##/ -/'
 
 # --- Lab A -----------------------------------------------------------------------------------------------------------
+grant-passrole: ## ONCE per account, from the default CodeEditorInstanceRole terminal: let WSParticipantRole pass the Lab A roles
+	bash scripts/grant_passrole.sh
 preflight:      ## FIRST: can this machine and account run the labs? (read-only; checks tools, internet, IAM, Bedrock model)
 	$(PY) python scripts/preflight.py
 bootstrap:      ## build + deploy stack DezervLabA, seed data, write .env
