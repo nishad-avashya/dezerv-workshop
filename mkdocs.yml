@@ -89,6 +89,7 @@ nav:
   - "Capstone: Your squad's agent":
       - capstone/index.md
       - Discovery: capstone/discovery.md
+      - Ready profiles: capstone/profiles.md
       - "Phase 1: Data and incident": capstone/phase-1-data.md
       - "Phase 2: Build": capstone/phase-2-build.md
       - "Phase 3: Prove it and export": capstone/phase-3-prove.md

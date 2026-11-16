@@ -10,6 +10,22 @@ portable starter: manifest, charter, synthetic data, custom tool, rendered Cedar
 The factory generates the plumbing. **Your 65 minutes go into domain thinking:** which failure mode matters, what evidence proves it,
 what the agent must never touch, and how you would know it got worse.
 
+## Profile and schema
+
+Two words you will see in the commands:
+
+- **Profile:** a YAML file that describes your service and one incident: the service name and stack, the planted bad
+  deploy, the error code, the custom tool, and the fields that must stay private. The generator reads it and creates
+  the synthetic data (records, logs, deploys, alert, past incidents). `PROFILE=kyc-svc` uses a ready profile from
+  `capstone/profiles/`.
+- **Schema (`SCHEMA=`):** the path to your own profile file, for a service that has no ready profile. It has the same
+  format as a profile. Copy a ready one, edit it, and pass it with `make new-squad SQUAD=<squad> SCHEMA=my-service.yaml`.
+  If a required field is missing, the generator stops and names it.
+
+!!! note "Not the same as the manifest's schema"
+    `agent.yaml` is checked by a separate JSON schema (`factory/schema/agent.schema.json`). That is the one that refuses
+    `autonomy` above `L1`. It has nothing to do with `SCHEMA=`.
+
 !!! note "Before you start"
     The capstone builds on Lab A's stack and the Lab B factory in the same account. Are you behind? `make solution-part6` brings Lab A to its end.
     The running example on every page is **`SQUAD=kyc PROFILE=kyc-svc`**. Use your own squad name and profile.
@@ -18,7 +34,7 @@ what the agent must never touch, and how you would know it got worse.
 1. **Synthetic data only.** No production data, credentials, customer information or proprietary source code goes into the account.
    You *describe* your service and the generator makes mock data that looks like it.
 2. **Autonomy ceiling L0/L1.** The agent observes, diagnoses, recommends and files tickets. Every mutation goes through a decoy tool that policy blocks.
-   The schema refuses `autonomy` above `L1` and `forbid_ops: false`.
+   The manifest's schema refuses `autonomy` above `L1` and `forbid_ops: false`.
 3. **The factory generates; you edit** manifests, charters, data and tool code. Do not hand-write Cedar or Gateway targets, and do not edit files under `agents/`.
 4. **Scope: ONE failure mode and ONE custom tool.** This is the most common way squads run out of time. If you start modelling the whole service, narrow it.
 
@@ -32,7 +48,7 @@ what the agent must never touch, and how you would know it got worse.
 
 | Minutes | Phase | Page | Commands | Checkpoint |
 |---|---|---|---|---|
-| 0-10 | Discovery | [Discovery](discovery.md) | Claude Code asks the discovery questions; pick a profile or write a schema | |
+| 0-10 | Discovery | [Discovery](discovery.md) | Claude Code asks the discovery questions; pick a ready profile or write your own (`SCHEMA=`) | |
 | 10-25 | Data and incident | [Phase 1: data](phase-1-data.md) | `make new-squad`, `make provision-squad`, edit `charter.md` | **C1** at ~25 min |
 | 25-50 | Build | [Phase 2: build](phase-2-build.md) | `make new-agent`, `make deploy-agent`, custom tool, forbidden zones, run the incident | **C2** at ~50 min |
 | 50-65 | Prove it | [Phase 3: prove](phase-3-prove.md) | one replay case of your own, `make eval`, `make gate`, `make prove-denial`, `make export` | **C3** at ~65 min |
@@ -53,7 +69,7 @@ correlated error logs, a red-herring service, a custom tool, 5 past incidents an
 | `notifications-svc` | OTP SMS delivery failures from provider throttling after a batch-size change (`v0.9.5`) | `E_SMS_THROTTLED` | `get_delivery_status(message_id)` | `kyc-svc` vendor latency |
 | `nav-ingest` | Mutual fund NAV file picked up late, so portfolio values are stale (`v1.3.0`); data-pipeline archetype | `E_NAV_MISSING` | `get_ingest_run(run_id)` | `ledger-recon` slow step |
 
-Do you have your own service? Copy a profile, edit it and pass it with `SCHEMA=`. [Discovery](discovery.md) shows how.
+[Ready profiles](profiles.md) describes each one and what is left for you to do. Do you have your own service? Copy a profile, edit it and pass it with `SCHEMA=`. [Discovery](discovery.md) shows how.
 
 !!! warning "`kyc-svc` shares a log group with Lab A"
     Lab A already backfills red-herring logs into `/dezerv/kyc-svc`. The `kyc-svc` profile writes its own logs into the same group.
