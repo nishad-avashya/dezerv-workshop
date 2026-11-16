@@ -96,4 +96,8 @@ If it still fails, tell the instructor with the exact error text.
 | Port already in use | A previous forwarder is still running | `lsof -ti :8090 \| xargs kill`, or `make run-forwarder NAME=payments-gw PORT=8091` |
 | `go: command not found` | No Go toolchain | `make go-setup`, or `make go-prebuilt`. The deployer uses the prebuilt Lambda zip automatically |
 | Data changed but a tool returns old data | Lambdas cache data per container | Re-run `make bootstrap`; it passes a data hash so the Lambdas get fresh containers |
+| `INVALID agent.yaml: connectors.custom ...` (for example `is not of type 'array'` or `is not of type 'object'`) | The custom tool isn't a list of objects: it was pasted as a bare `{ ... }`, next to `[]`, or as a nested list | Put the tool inside the list: `custom: [{ name: mandates, type: lambda, runtime: go, path: tools/mandates-go }]`. See [Lab B Part 3](../lab-b/part-3-go-tool.md) |
+| `Go is not installed and there is no prebuilt zip: run make go-setup` | The `prebuilt/` folder is missing from your checkout | `git pull`, or `make go-setup` |
+| `[factory] Go not found: using prebuilt/mandates-go-arm64.zip` | Go isn't installed | Expected. The prebuilt zip is the same code |
+| The agent never calls the mandates tool | The tool isn't in `tools/list`: you didn't re-render or re-deploy | Run `make verify-labB-part3`, then `make new-agent` and `make deploy-agent` again |
 | Capstone agent can't see the custom tool | Custom tools need the `payments/custom.read` scope | Run `make bootstrap` once (it adds the scope) |
