@@ -131,14 +131,42 @@ may read deploys for `payments-gw` and `kyc-svc`, but never for `ledger-svc`.
     ```bash
     make cp6-start
     ```
-2. Edit `policy/cedar/60-ledger-zone.cedar`: uncomment the `forbid(...)` block and replace `/* TODO */` with a condition
-   on the `service` input. Two analyzer rules learned in testing: guard every input read
-   (`context.input has service && context.input.service == "..."`), and use `when { ... }` with
-   `principal is AgentCore::OAuthUser` rather than `unless { ... like ... }`.
+2. Open `policy/cedar/60-ledger-zone.cedar` and make two edits:
+    - **Uncomment the `forbid(...)` block** by deleting the leading `// ` on each of its lines. Keep the explanatory comments above it as they are.
+    - **Replace `/* TODO */`** with a condition that matches the service. Use this shape, with the service you want to block in place of `<service>`:
+        ```text
+        context.input has service && context.input.service == "<service>"
+        ```
+
+    !!! note
+        Edit the copy (`60-ledger-zone.cedar`), not the `.todo` template. `make policy` ignores the `.todo` file.
+
 3. Apply it:
     ```bash
     make policy
     ```
+
+    ??? warning "If `make policy` rejects your rule"
+        The policy analyzer is picky. Always check `has service` before reading `service`, and keep the `when { ... }` form
+        with `principal is AgentCore::OAuthUser`. An `unless { ... like ... }` form is rejected as "Overly Restrictive".
+
+        The same error appears if the condition is true for every call, for example a missing `when` block or only
+        `context.input has service`. The condition must also compare `context.input.service` to a service name.
+        The other policies still apply, and `make policy` re-attaches the engine, so the Gateway stays protected.
+
+        Check that the active part of `policy/cedar/60-ledger-zone.cedar` has this shape, with no `//` left on these lines:
+
+        ```text
+        forbid(
+          principal is AgentCore::OAuthUser,
+          action == AgentCore::Action::"changes___get_recent_deploys",
+          resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
+        )
+        when {
+          context.input has service && context.input.service == "<service>"
+        };
+        ```
+
 4. Test both sides. `ledger-svc` must be denied and name your policy (`P60_ledger_zone_1`); `payments-gw` must still work:
     ```bash
     uv run --python 3.12 python scripts/mcp_cli.py call changes___get_recent_deploys '{"service":"ledger-svc"}'
