@@ -55,22 +55,21 @@ evals:
 budgets: { max_tool_calls: 25, max_tokens: 200000 }  # (11)!
 ```
 
-1. The tenant and agent id. It names the output folder `agents/payments-gw/` and every cloud resource:
-   Gateway `fx-payments-gw`, policy engine `fx_payments_gw_pe`, memory and Runtime `fx_payments_gw`.
-2. `labs/B/charter.md`, relative to the manifest. It must have the sections **Purpose, SLOs, Invariants, Forbidden
-   zones, Escalation**. They are copied into the rendered system prompt.
-3. Only `sonnet-4.6` is allowed (a schema enum).
-4. `L0` observes only. `L1` adds ticket writes in project PAY, as Lab A does. The schema allows only these two.
-5. One entry per built-in connector. Each becomes a Gateway target backed by **Lab A's** Lambda for that connector.
-   The values also scope the Cedar. For example `changes.services: [payments-gw]` makes every other known service
-   out of bounds.
-6. Part 3 adds your own tool here: `- { name: mandates, type: lambda, runtime: go, path: tools/mandates-go }`.
-7. Renders CP-3, the forbid on restart, scale and rollback. It must be `true`. The schema has `const: true`.
-8. Part 4 adds `service:ledger-svc` here. A zone is `service:<name>` or `<target>.<tool>`. Wildcards are refused.
-9. Seed folders for the agent's own AgentCore Memory. They are rendered into namespaces
-   `/products/payments-gw/incidents` and `/products/payments-gw/runbooks`.
-10. Replay cases for the eval. The renderer refuses fewer than 3. The gates `unsafe_attempts` and `pii_leaks` must be `0`.
-11. Become the Runtime's `MAX_TOOL_CALLS` and `MAX_TOKENS_BUDGET`. `max_tool_calls` is at most 25.
+1. The agent's name. It names the output folder `agents/<product>/` and the cloud resources the factory creates for it.
+2. A markdown file with your agent's purpose and rules. It needs five sections: **Purpose, SLOs, Invariants,
+   Forbidden zones, Escalation**. They are copied into the agent's system prompt.
+3. The model the agent runs on. Only `sonnet-4.6` is allowed.
+4. How much the agent may do. `L0` only reads. `L1` can also file tickets. Nothing higher is allowed.
+5. The tools the agent can use. List only what it needs, and narrow each one (a log group, a table, a service). Anything
+   you don't list is out of bounds, and the factory writes the policy that blocks it.
+6. Your own tools, as a list. Each entry is `{ name, type: lambda, runtime, path }`. Leave it `[]` if the built-in tools are
+   enough.
+7. Blocks restart, scale and rollback. Must stay `true`, because the agent recommends and a human acts.
+8. Things the agent must never touch. An entry is `service:<name>` (a whole service) or `<target>.<tool>` (one tool).
+   No wildcards.
+9. Folders of past incidents and runbooks that the agent can search.
+10. Test incidents to replay against the agent, with the pass marks it must reach. You need at least 3 cases.
+11. Limits on tool calls (25 at most) and tokens per run.
 
 ## Steps
 
@@ -143,18 +142,8 @@ All 11 Lab A statements are there, with the `{{GATEWAY_ARN}}` placeholder filled
 `changes.services` lists only `payments-gw`, so deploy lookups for `kyc-svc`, `ledger-svc` and `notifications-svc`
 are forbidden. You didn't write any of these rules. Narrowing a connector was enough.
 
-```cedar title="agents/payments-gw/policy/60-zones.cedar (one of the four statements)"
-forbid(
-  principal is AgentCore::OAuthUser,
-  action in [
-    AgentCore::Action::"changes___get_recent_deploys"
-  ],
-  resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
-)
-when {
-  context.input has service && context.input.service == "ledger-svc"
-};
-```
+The renderer created all of these Cedar files for you. You can open any of them in `agents/payments-gw/policy/`
+(under the repo root), for example `agents/payments-gw/policy/60-zones.cedar`.
 
 ### 4. Try to break it
 
