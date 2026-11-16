@@ -4,25 +4,20 @@
 
 ## What you'll learn
 - Declare a forbidden zone in the manifest and see it become Cedar `forbid` statements.
-- See that **policy follows the manifest**: re-rendering adds or removes rules, and deploying enforces them in the
-  Gateway's policy engine.
+- Know what you can do next while building your own agent: test it, replay incidents, run evals.
 
 ## Concepts
 
 The charter in `labs/B/charter.md` says under *Forbidden zones*: "`ledger-svc` internals (owned by the ledger team)".
-In Lab A you turned a sentence like that into Cedar by hand (`60-ledger-zone.cedar.todo`, solution `make cp6`). In
-Lab B you declare it once in `agent.yaml`, and the factory writes the Cedar.
+In Lab A you turned that sentence into Cedar by hand. In Lab B you declare it once in `agent.yaml`, and the factory
+writes the Cedar.
 
-`policy.forbidden_zones` takes two kinds of entries, and wildcards are refused:
+`policy.forbidden_zones` takes two kinds of entries. Wildcards are refused.
 
-| Zone | Renders |
+| Zone | Blocks |
 |---|---|
-| `service:<name>` | a `forbid` on every tool with a `service` input (`logs___query_logs`, `logs___get_log_patterns`, `changes___get_recent_deploys`) when `context.input.service == "<name>"` |
-| `<target>.<tool>` | a `forbid` on exactly that tool, for example `tickets.add_comment` forbids `tickets___add_comment` |
-
-All zone rules go into `agents/payments-gw/policy/60-zones.cedar`, together with the scoping rules from Part 1
-(services the connectors don't list). On every render the old `*.cedar` files are deleted first. If you remove a zone
-from the manifest, its rule disappears on the next render and deploy.
+| `service:<name>` | every tool with a `service` input (logs, deploys) when it is called for that service |
+| `<target>.<tool>` | exactly that tool, for example `tickets.add_comment` |
 
 ## Steps
 
@@ -37,109 +32,28 @@ policy:
   forbidden_zones: [service:ledger-svc]
 ```
 
-The reference is `labs/B/solutions/agent.part4.yaml`. It keeps the Part 3 `mandates` tool.
+The reference is `labs/B/solutions/agent.part4.yaml`. It keeps the Part 3 `mandates` tool, so keep yours in `custom`.
 
-### 2. Re-render and look at the zones file
+### 2. Re-render
 
 ```bash
 make new-agent NAME=payments-gw FROM=labs/B/agent.yaml
 ```
 
-??? example "Expected output"
-    ```text
-    rendered agents/payments-gw from manifest@8404c89fdf: 10-permit-reads.cedar, 20-permit-ticket-writes.cedar, 30-forbid-mutations.cedar, 40-forbid-unbounded.cedar, 50-explicit-deny.cedar, 60-zones.cedar
-    ```
-    The sha is `8404c89fdf` only if your manifest is identical to `labs/B/solutions/agent.part4.yaml`.
+The Cedar is written to `agents/payments-gw/policy/60-zones.cedar` (under the repo root). It now has 5 `forbid`
+statements instead of 4. Check:
 
-!!! note "Where the file is"
-    The Cedar files are written to `agents/payments-gw/policy/`, under the repo root (the folder with the `Makefile`),
-    not under `labs/B/`. Each render deletes and rewrites them, so a missing or deleted `60-zones.cedar` is recreated.
-    If your editor shows it empty or stale, refresh the file tree.
-
-`agents/payments-gw/policy/60-zones.cedar` now has 5 statements instead of 4. This one is new:
-
-```cedar title="agents/payments-gw/policy/60-zones.cedar (new statement)"
-forbid(
-  principal is AgentCore::OAuthUser,
-  action in [
-    AgentCore::Action::"logs___query_logs",
-    AgentCore::Action::"logs___get_log_patterns"
-  ],
-  resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
-)
-when {
-  context.input has service && context.input.service == "ledger-svc"
-};
+```bash
+grep -n 'ledger-svc' agents/payments-gw/policy/60-zones.cedar
 ```
 
-??? info "The complete rendered file"
-    ```cedar title="agents/payments-gw/policy/60-zones.cedar"
-    // generated from agent.yaml@8404c89fdf - edit the manifest, not this file
-    // scoping and forbidden zones derived from the manifest
-
-    forbid(
-      principal is AgentCore::OAuthUser,
-      action in [
-        AgentCore::Action::"logs___query_logs",
-        AgentCore::Action::"logs___get_log_patterns"
-      ],
-      resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
-    )
-    when {
-      context.input has service && context.input.service == "kyc-svc"
-    };
-
-    forbid(
-      principal is AgentCore::OAuthUser,
-      action in [
-        AgentCore::Action::"changes___get_recent_deploys"
-      ],
-      resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
-    )
-    when {
-      context.input has service && context.input.service == "kyc-svc"
-    };
-
-    forbid(
-      principal is AgentCore::OAuthUser,
-      action in [
-        AgentCore::Action::"changes___get_recent_deploys"
-      ],
-      resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
-    )
-    when {
-      context.input has service && context.input.service == "ledger-svc"
-    };
-
-    forbid(
-      principal is AgentCore::OAuthUser,
-      action in [
-        AgentCore::Action::"changes___get_recent_deploys"
-      ],
-      resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
-    )
-    when {
-      context.input has service && context.input.service == "notifications-svc"
-    };
-
-    forbid(
-      principal is AgentCore::OAuthUser,
-      action in [
-        AgentCore::Action::"logs___query_logs",
-        AgentCore::Action::"logs___get_log_patterns"
-      ],
-      resource == AgentCore::Gateway::"{{GATEWAY_ARN}}"
-    )
-    when {
-      context.input has service && context.input.service == "ledger-svc"
-    };
-    ```
-
-!!! note "Why only one new statement?"
-    Deploy lookups for `ledger-svc` were **already** forbidden in Part 1, because `changes.services` lists only
-    `payments-gw` (the third statement above). The renderer doesn't repeat a rule it has already written, so the zone
-    adds only the missing one, the log tools for `ledger-svc`. The zone still matters. It states the intent in the
-    manifest, and it keeps holding if someone later adds `ledger-svc` to `changes.services`.
+!!! note "Notes"
+    - Each render deletes and rewrites every `*.cedar` file, so a missing file is recreated and a zone you remove from
+      the manifest disappears on the next render.
+    - Only one statement is new. Deploy lookups for `ledger-svc` were already forbidden in Part 1, because
+      `changes.services` lists only `payments-gw`. The zone states the intent, and keeps holding if someone later adds
+      `ledger-svc` to `changes.services`.
+    - Your sha differs from the docs if your manifest differs from `agent.part4.yaml`. That is expected.
 
 ### 3. Deploy to enforce it
 
@@ -149,15 +63,11 @@ Rendering only writes files. The Gateway enforces the new rule after you deploy:
 make deploy-agent NAME=payments-gw
 ```
 
-??? example "Expected output (representative output, trimmed)"
+??? example "Expected output (trimmed)"
     ```text
-    [factory] updated Lambda dezerv-laba-fx-payments-gw-mandates
-    [factory] gateway ready with targets ['changes', 'db', 'logs', 'mandates', 'ops', 'tickets', 'warehouse']
-    [factory] detaching engine while policies are applied (brief window without enforcement)
     [factory] 18 Cedar policies ACTIVE
     [factory] policy engine attached (ENFORCE) and interceptor attached
     [factory] runtime READY: arn:aws:bedrock-agentcore:us-west-2:<account>:runtime/fx_payments_gw-...
-    [factory] done. state in agents/payments-gw/.state.json
     ```
 
 ## Verify
@@ -173,19 +83,38 @@ make verify-labB-part4
 
     RESULT: PASS
     ```
-    "rendered agent matches the current manifest" compares `agents/payments-gw/.manifest.sha` with the sha of
-    `labs/B/agent.yaml`. If you edited the manifest after rendering, re-render and re-deploy.
+    If "rendered agent matches the current manifest" fails, you edited `agent.yaml` after rendering. Re-render and
+    re-deploy.
 
-## What just happened
-- One string in the manifest, `service:ledger-svc`, became a Cedar `forbid` in `60-zones.cedar`.
-- The renderer combined it with the scoping rules it already had and didn't duplicate any rule.
-- `deploy-agent` replaced the policy set in `fx_payments_gw_pe` (18 statements). It briefly detaches the engine
-  while it applies them, a service quirk described in `FINDINGS.md`, and always re-attaches it in ENFORCE mode.
-- The charter's sentence "ledger-svc internals" and the enforced policy now come from the same reviewed source.
+## While you build your own agent
 
-!!! tip "Behind?"
-    `make solution-labB-part4` copies `labs/B/solutions/agent.part4.yaml` over `labs/B/agent.yaml`, re-renders and
-    deploys. It runs the earlier Lab B solutions first.
+Once an agent is deployed, this is the loop you use in the capstone. Change `agent.yaml` (or the charter, or a tool),
+then `make new-agent` and `make deploy-agent`, then try one of these.
+
+**Test it with an incident.** Start the forwarder in one terminal and send an alert from a second:
+
+```bash
+make run-forwarder NAME=payments-gw
+curl -X POST localhost:8090/alert -d @data/alerts/replay-psp-5xx.json
+```
+
+`data/alerts/` has ten alerts. To ask your own question, put it in `summary`, as in Part 3.
+
+**Replay many incidents and check the gates.** The replay cases in `evals/replay/` and the pass marks in `agent.yaml`
+(`evals.gates`) are used by:
+
+```bash
+make eval NAME=payments-gw     # replays every case against the deployed agent, about 12 minutes
+make gate NAME=payments-gw     # exits 1 if any gate is missed
+```
+
+**Add a case.** Copy a file in `evals/replay/`, then change the alert, `expected_root_cause` and `expected_tools`. The
+renderer needs at least 3 cases.
+
+**Add another tool or zone.** Add a tool under `connectors.custom` (Part 3) or an entry under `forbidden_zones`, then
+re-render and deploy.
+
+Run evals again after you change the prompt, the model, a tool or the policy. That catches regressions.
 
 ## Troubleshooting
 | Symptom | Fix |
@@ -195,14 +124,13 @@ make verify-labB-part4
 | `FAIL  rendered agent matches the current manifest` | You edited `agent.yaml` after rendering. Run `make new-agent ...` and `make deploy-agent NAME=payments-gw` |
 | `deploy-agent` stalls, then `policy name '...' is still in use after 60 s` | A deleted policy still holds its name (names are unique across the account). Wait a minute and re-run. If it persists, `make destroy-agent` the old agent that owns it |
 
-!!! question "Discuss"
-    `forbidden_zones` covers tools with a `service` input and whole tools. What would a forbidden zone for *data*
-    look like, for example "never read the `ledger_entries` collection"? Should it go in Cedar, in the tool, or in
-    both? (Lab A's CP-6 note has a hint: Cedar cannot look inside a free-form filter object.)
+!!! tip "Behind?"
+    `make solution-labB-part4` copies `labs/B/solutions/agent.part4.yaml` over `labs/B/agent.yaml`, re-renders and
+    deploys. It runs the earlier Lab B solutions first.
 
 ## Clean up
 
-When you no longer need the factory agent (for example at the end of the day), remove the factory agent's cloud resources (Lab A is untouched):
+When you no longer need the factory agent (for example at the end of the day), remove its cloud resources (Lab A is untouched):
 
 ```bash
 make destroy-agent NAME=payments-gw

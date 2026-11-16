@@ -29,6 +29,10 @@ idempotent, so you can run it again after every change.
 
 This is `labs/B/agent.yaml` with its inline comments moved into annotations. Click a (+) to read one.
 
+!!! important "`agent.yaml` is the template for the capstone too"
+    **`agent.yaml` is the one file that defines an agent.** In the capstone you write the same manifest for your own
+    service, so learn these fields now.
+
 ```yaml title="labs/B/agent.yaml"
 product: payments-gw            # (1)!
 owner_team: payments
