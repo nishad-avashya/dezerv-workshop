@@ -20,17 +20,15 @@ then `InvokeAgentRuntime`, then diagnosis, ticket and page.
 
 ![Go service calls the agent](../diagrams/lab-b-go-forwarder.drawio)
 
-Three design choices to notice:
+Two things to notice:
 
-- **Session per alert fingerprint.** The session id is `alert-` plus the first 32 hex characters of
-  `sha256(alert | service | window_start)`. That makes 38 characters, and Runtime needs at least 33. A repeat alert
-  for the same incident lands in the same session instead of starting a new investigation.
-- **Region from the ARN.** The client region is read out of the runtime ARN
-  (`arn:aws:bedrock-agentcore:<region>:...`), not from `AWS_REGION`. A stray `AWS_REGION` once pointed the client at
-  the wrong region, and the 404 it produced looked like an agent problem.
-- **Fail-safe.** If the invoke fails, the handler logs an error and returns `502 agent unavailable; escalated to
-  human on-call`. It never swallows the alert. In production that branch calls your paging system. Each alert also
-  has a deadline (`-timeout`, default 10 minutes).
+- **One session per incident.** The alert's fingerprint picks the session, so a repeat alert for the same incident reuses it instead of starting a new investigation.
+- **It never drops an alert.** If the agent is down, the service answers `502 agent unavailable; escalated to human on-call`. In production that branch calls your paging system.
+
+??? info "How it works"
+    - **Session id:** `alert-` plus the first 32 hex characters of `sha256(alert | service | window_start)`. That is 38 characters, and Runtime needs at least 33.
+    - **Region:** The client region is read from the runtime ARN (`arn:aws:bedrock-agentcore:<region>:...`), not from `AWS_REGION`. A stray `AWS_REGION` once pointed the client at the wrong region, and the 404 it produced looked like an agent problem.
+    - **Deadline:** Each alert has a timeout (`-timeout`, default 10 minutes).
 
 The heart of the handler, from `go/alert-forwarder/main.go`:
 

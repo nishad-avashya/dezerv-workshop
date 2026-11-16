@@ -36,11 +36,6 @@ remember the guardrails, because the schema holds them.
 | LB3 | Invoke a deployed agent from a Go service | Runtime `InvokeAgentRuntime` via `aws-sdk-go-v2` |
 | LB4 | Expose a Go function as a governed tool behind the Gateway | Gateway Lambda target (`provided.al2023`) + Cedar |
 
-!!! note "Out of scope today"
-    LB5 (stretch: the same agent as an AgentCore **Harness** configuration, to compare config-first and code) and
-    stretch S2 (a Go MCP server on Runtime) are **not built**. We'll talk them through in the discussion, but there
-    are no steps for them.
-
 ## Prerequisites
 
 **Lab A is deployed.** Lab B reuses Lab A's stack: its Cognito clients, interceptor and tool Lambdas. Check it from

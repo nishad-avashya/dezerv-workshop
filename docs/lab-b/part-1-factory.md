@@ -248,7 +248,3 @@ make verify-labB-part1
 !!! tip "Behind?"
     `make solution-labB-part1` renders and deploys `payments-gw` from `labs/B/agent.yaml` (it runs `make link-labA`
     first). It needs Lab A deployed: `make solution-part6`.
-
-!!! question "Discuss"
-    Validation runs when you render. Deploy uses whatever is in `agents/`. Where would you run `make new-agent` in
-    Dezerv's CI so that nobody can deploy files that don't match a reviewed manifest? (Hint: `.manifest.sha`.)

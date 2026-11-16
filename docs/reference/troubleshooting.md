@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Start with the exact error text. Each lab page has its own troubleshooting section; this page collects the problems that cut across labs.
+Start with the exact error text. Search for it in the search box at the top of the page, or scan the tables below. Some lab pages also have their own troubleshooting section.
 
 !!! danger "Permission denied on IAM, Cognito, Lambda, Gateway, policy engine, memory or Runtime?"
     The workshop role is more restrictive than expected. **Stop**, note the denied action and tell the instructor.
@@ -55,6 +55,10 @@ If it still fails, tell the instructor with the exact error text.
 | `bash: make: command not found` | The Workshop Studio editor has no `make` | `bash bootstrap.sh` |
 | `refusing: expected account X, credentials are for Y` | The `EXPECT_ACCOUNT` guard did its job | Check which account your credentials are for |
 | `make bootstrap` prints `FAILED <Resource> ... not authorized to perform: <action>` | The role lacks an action the stack needs | Record the action and tell the instructor. The failed stack is deleted automatically |
+| `make bootstrap` fails with `not authorized to perform: iam:PassRole` | `WSParticipantRole` can't pass the Lab A roles to Lambda and AgentCore until it is granted | In a **new terminal on `CodeEditorInstanceRole`** (no credentials pasted) run `make grant-passrole`. Then paste the `WSParticipantRole` credentials in another new terminal and re-run. See [Open your environment](../getting-started/environment.md#4-set-up-the-iam-role) |
+| `make grant-passrole`: `you are already on WSParticipantRole` | The grant has to run as the default role, and this terminal has the `WSParticipantRole` credentials pasted | Open a **new terminal** (it starts on `CodeEditorInstanceRole`) and run it there |
+| `make grant-passrole`: `refusing: credentials are for account X but EXPECT_ACCOUNT=Y` | `EXPECT_ACCOUNT` is for a different account | Re-run `export EXPECT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)` in this terminal |
+| `AccessDenied` or `not authorized to perform` in a terminal you just opened, though it worked in another | A new terminal starts on `CodeEditorInstanceRole`. The `WSParticipantRole` credentials belong to the terminal you pasted them into | Paste the `export` command from the workspace home page again, then check with `aws sts get-caller-identity` |
 | `verify-bootstrap`: `log group has >= 5000 events (found 4303)` | CloudWatch is still indexing the back-dated logs | It waits up to 5 min on its own. Don't re-run `make bootstrap` |
 | Logs tools return nothing | Wrong incident day, or a stale `.env` | Re-run `make bootstrap` *on the day* |
 | Stray `AWS_REGION=us-east-1` in your shell | Other tools trust it | The lab scripts pin us-west-2 (`LAB_REGION` overrides). Unset `AWS_REGION` anyway |
@@ -68,6 +72,9 @@ If it still fails, tell the instructor with the exact error text.
 | Everything is allowed after a policy edit | The engine is detached (for example after a failed apply) | `make policy`, which re-attaches even on failure |
 | `ConflictException ... already exists` | A policy deleted a moment ago still holds its name | Re-run; the script retries |
 | `UPDATE_FAILED` / "Overly Restrictive" on a policy | Analyzer rejection (a service quirk) | Run `make policy`, which detaches, applies and re-attaches |
+| `ops___restart_service` returns `OK` with `"executed": false` | The call **went through**. `executed: false` is only the decoy saying nothing real happened. It does not mean the call was blocked, and it logs `WOULD_EXECUTE` | Expected in Part 1, before policy. Once Cedar is attached the same call returns the `-32002` error below |
+| `ERROR` with code `-32002` and `Tool Execution Denied ... denied due to P30_forbid_mutations_1` | Cedar denied the call and named the policy that did it | Expected: the guardrail is working. If a call that should be allowed is denied, check the policy name in the message against `policy/cedar/` |
+| `make policy`, `make solution-partN` or `make deploy-agent` fails with `P60_ledger_zone_1 -> CREATE_FAILED` or `UPDATE_FAILED: Overly Restrictive ... changes___get_recent_deploys` | Your own `policy/cedar/60-ledger-zone.cedar` from the forbidden-zone exercise is still there, and its condition is true for every call. Every command that applies Cedar re-applies that file. The other policies apply and the Gateway stays protected | Fix the `when` block so it compares the service (`context.input has service && context.input.service == "<service>"`), or delete the file (`rm policy/cedar/60-ledger-zone.cedar`) and run `make policy`. `make cp6-off` only removes the reference solution, not your file |
 | Gateway 5xx right after create | Targets are not READY yet | Wait; `make gateway` waits for READY |
 
 ## Agent, memory and evals
@@ -76,6 +83,7 @@ If it still fails, tell the instructor with the exact error text.
 |---|---|---|
 | Wrong agent answer | Usually tools or data, not the prompt | Run the part's `verify` target, then read the audit log for the session, before touching the prompt |
 | Memory run does not cite INC-2026-031 | Retrieval and model variance | Re-run; check `make verify-labA-part5` |
+| `make seed-memory`: `timed out waiting for records` | Memory indexing is slow | Run `make seed-memory` again; it skips what is already there |
 | Eval case errors with `RATE_LIMITED` | Another `oncall` workload is running in parallel | Run evals on their own (the runner is sequential) |
 | Gate fails on one case | Model runs vary | Re-run only that case with `--cases` (see [Part 6](../lab-a/part-6-evals.md)) before changing the prompt |
 

@@ -48,7 +48,7 @@ Second editor (Build with Skills)? Clone the repo, `export EXPECT_ACCOUNT=...`, 
 | 3 (10) | add `{ name: mandates, type: lambda, runtime: go, path: tools/mandates-go }` under `connectors.custom` in `labs/B/agent.yaml`; `make new-agent ...`; `make deploy-agent NAME=payments-gw`; ask "Is user U-1042's SIP failing because of their mandate or because of the PSP?" | `make verify-labB-part3` | A Go Lambda is a governed tool. Expected answer: mandate ACTIVE, two `E_PSP_TIMEOUT` failures, so it is the PSP. The factory derived the Cedar rules and scope. |
 | 4 (2) | add `service:ledger-svc` to `policy.forbidden_zones`; re-render; deploy | `make verify-labB-part4` | Policy follows the manifest. |
 
-Behind? `make solution-labB-part1` ... `part4` (these overwrite `labs/B/agent.yaml` with the reference manifest). Not built: stretch S1 (Harness variant) and S2 (Go MCP server on Runtime).
+Behind? `make solution-labB-part1` ... `part4` (these overwrite `labs/B/agent.yaml` with the reference manifest).
 
 ---
 ## Capstone: each squad builds an on-call agent for its own service (90 min)

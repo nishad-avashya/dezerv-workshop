@@ -1,4 +1,4 @@
-# Lab B: Agent factory and Go (30 min; 40 with a stretch)
+# Lab B: Agent factory and Go (30 min)
 
 Lab A built **one** agent by hand. Lab B turns it into a template driven by one file, `agent.yaml`, and connects it to a Go stack in both directions: a Go service **calls** the agent, and a Go function **is a tool** for the agent.
 
@@ -121,9 +121,6 @@ make verify-labB-part4
 ```
 - `new-agent` re-renders `agents/payments-gw/`; look at `agents/payments-gw/policy/60-zones.cedar` for the new forbid.
 - `deploy-agent` applies the updated Cedar to enforce it.
-
-## Stretch (not built)
-S1 a Harness variant of the same agent; S2 a Go MCP server on Runtime. See `INSTRUCTOR.md`.
 
 ## Ground rules
 Never set `autonomy` above L1; never turn `forbid_ops` off. The workshop schema refuses both.
