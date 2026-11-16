@@ -47,7 +47,7 @@ make verify-labA-part5
 
 ## Part 6: Deploy, evaluate, gate (15 min)
 ```
-make deploy-agent                       # AgentCore Runtime, a few minutes: start it early
+make deploy-agent                       # AgentCore Runtime, a few minutes: run it first, read the concepts while it deploys
 make eval OUT=evals/report_baseline.json   # replays 10 incidents against the deployed agent (about 12 min)
 make gate REPORT=report_baseline.json      # PASS
 make break-prompt && make deploy-agent     # removes the untrusted-content and cite-evidence rules

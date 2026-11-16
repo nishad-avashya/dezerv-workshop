@@ -27,5 +27,5 @@ The day mixes **AWS workshop content** (feature learning, generic examples) with
 
 !!! warning "Start long-running steps early"
     - `make bootstrap` takes about 6 minutes, so run it during the mental-model talk.
-    - `make deploy-agent` takes a few minutes, so start it in the background at the beginning of Lab A Part 5.
+    - `make deploy-agent` takes a few minutes, so run it first in Lab A Part 6 and read the concepts while it deploys.
     - A full `make eval` takes about 12 minutes, because cases run one at a time under the 30-calls-a-minute rate limit.

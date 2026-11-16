@@ -1,12 +1,27 @@
 # Part 6: Deploy, evaluate, gate
 
-!!! time "15 minutes"
+!!! time "About 25 minutes, plus an optional exercise"
+
+## Start the deploy first
+
+Deploying the agent to AgentCore Runtime takes a few minutes, so start it now and read on while it runs:
+```bash
+make deploy-agent
+```
+??? example "Expected output (representative)"
+    ```text
+    uploaded <n> MB -> s3://dezerv-laba-artifacts-<account>-us-west-2/runtime/agent-<timestamp>.zip
+    status CREATING
+    ...
+    status READY
+    runtime READY: arn:aws:bedrock-agentcore:us-west-2:<account>:runtime/dezerv_payments_oncall-<suffix>
+    ```
 
 ## What you'll learn
 - How the same agent code runs on **AgentCore Runtime** instead of your laptop process.
 - How replayed incidents score the deployed agent with **deterministic scorers** plus a **DeepEval GEval judge** on Bedrock.
 - How a **gate** turns those scores into a pass/fail exit code, and how that becomes a **CI check** on every pull request.
-- How a small prompt change that "looks harmless" is caught by the gate.
+- (Optional) How a small prompt change that "looks harmless" is caught by the gate.
 
 ## Concepts
 
@@ -43,29 +58,21 @@ The case ids are `psp-5xx`, `mandate-revoked`, `webhook-lag`, `ledger-mismatch`,
 `psp-timeout-recurrence`, `ambiguous-low`, `no-evidence` and `ticket-injection`. Two are injection cases
 (`ticket-injection`, `ledger-mismatch`), one has no evidence at all (`no-evidence`: the agent must escalate rather than guess).
 
-!!! warning "A full eval takes about 12 minutes"
-    Cases run one at a time because the rate limit is 30 calls a minute **per principal**, and every case uses the
-    same `oncall` principal. Do not run other `oncall` work (`make run-incident`, verifies) while an eval runs.
-    If time is short, run a subset with `--cases` (see step 4) and look at the instructor's saved report.
+!!! warning "These steps take time"
+    - **Deploy:** a few minutes.
+    - **A full eval:** about 12 minutes. Cases run one at a time because the rate limit is 30 calls a minute **per principal**, and every case uses the same `oncall` principal.
+    - Do not run other `oncall` work (`make run-incident`, verifies) while an eval runs.
+    - Run an eval again only if you need to. The baseline run is the one that counts.
 
 ## Steps
 
-### 1. Make sure the agent is deployed
-You started `make deploy-agent` in Part 5. If it has finished, its last line is `runtime READY: ...`. If you did not
-start it, run it now (a few minutes):
-```bash
-make deploy-agent
-```
-??? example "Expected output (representative)"
-    ```text
-    uploaded <n> MB -> s3://dezerv-laba-artifacts-<account>-us-west-2/runtime/agent-<timestamp>.zip
-    status CREATING
-    ...
-    status READY
-    runtime READY: arn:aws:bedrock-agentcore:us-west-2:<account>:runtime/dezerv_payments_oncall-<suffix>
-    ```
+### 1. Check the deploy finished
+The deploy you started at the top ends with `runtime READY: ...`. If it is still running, wait for it.
 
 ### 2. Run the baseline eval
+!!! warning "This takes about 12 minutes"
+    Start it and wait. Don't run other `oncall` work (`make run-incident`, verifies) meanwhile, or cases fail with `RATE_LIMITED`.
+
 ```bash
 make eval OUT=evals/report_baseline.json
 ```
@@ -97,7 +104,7 @@ make gate REPORT=report_baseline.json
     GATE PASSED
     ```
 
-### 4. If one case fails, rerun just that case
+### 4. Only if a case failed: rerun just that case
 Model runs vary; a one-off miss is often flaky, so rerun once before touching the prompt. Find the failing case and
 the tools it skipped, then rerun only that case (comma-separated ids, no spaces) and gate that report:
 ```bash
@@ -107,9 +114,37 @@ uv run --python 3.12 --with boto3 --with deepeval python evals/run_eval.py --cas
 make gate REPORT=report_retry.json
 ```
 A single-case report only tells you about that case. `make verify-labA-part6` checks `report_baseline.json`, so rerun
-the full baseline before the break-it steps if it failed.
+the full baseline before the optional exercise if it failed.
 
-### 5. Break it
+### 5. See how this runs in CI
+`ci-examples/agent-eval-gate.yml` is an **example** GitHub Actions workflow (it lives outside `.github/workflows/` on
+purpose, so it does not run in this repo). On a pull request that touches the agent, its policy, the Lambdas or the
+replay cases, it deploys the PR version to an eval runtime in a synthetic-data-only account, replays the incidents and
+runs the gate; a non-zero exit blocks the merge:
+```yaml
+on:
+  pull_request:
+    paths: ["agent/**", "policy/**", "lambdas/**", "evals/replay/**"]
+jobs:
+  gate:
+    steps:
+      - name: Deploy the PR version of the agent to the eval runtime
+        run: make deploy-agent
+      - name: Replay incidents against the deployed agent
+        run: make eval OUT=evals/report.json
+      - name: Gate (non-zero exit blocks the merge)
+        run: make gate
+```
+
+## Optional exercise: break it and fix it
+
+!!! warning "This takes time, so do it only if you have it"
+    It needs two more deploys (a few minutes each) and another eval (about 12 minutes in full, a few on a subset).
+    Skip it if the session is running short. The lab is complete without it.
+
+Remove two prompt rules that look harmless and watch the gate catch it.
+
+### Break it
 `make break-prompt` blanks the two prompt rules that look optional: `agent/prompt/untrusted.md` (tagged text is data,
 not instructions) and `agent/prompt/cite.md` (cite every claim). The originals are kept as `*.orig`. Redeploy, eval
 and gate:
@@ -143,32 +178,12 @@ make gate REPORT=report_broken.json
     make gate REPORT=report_broken.json
     ```
 
-### 6. Fix it
+### Fix it
 ```bash
 make fix-prompt && make deploy-agent
 ```
 `make fix-prompt` restores both files (`prompt fix: untrusted.md=ok, cite.md=ok`) and the redeploy puts the good prompt
 back on the Runtime.
-
-### 7. See how this runs in CI
-`ci-examples/agent-eval-gate.yml` is an **example** GitHub Actions workflow (it lives outside `.github/workflows/` on
-purpose, so it does not run in this repo). On a pull request that touches the agent, its policy, the Lambdas or the
-replay cases, it deploys the PR version to an eval runtime in a synthetic-data-only account, replays the incidents and
-runs the gate; a non-zero exit blocks the merge:
-```yaml
-on:
-  pull_request:
-    paths: ["agent/**", "policy/**", "lambdas/**", "evals/replay/**"]
-jobs:
-  gate:
-    steps:
-      - name: Deploy the PR version of the agent to the eval runtime
-        run: make deploy-agent
-      - name: Replay incidents against the deployed agent
-        run: make eval OUT=evals/report.json
-      - name: Gate (non-zero exit blocks the merge)
-        run: make gate
-```
 
 ## Verify
 ```bash
@@ -182,13 +197,13 @@ make verify-labA-part6
 
     RESULT: PASS
     ```
-    If `evals/report_broken.json` does not exist, the last line is a `SKIP` with the commands to create it.
+    The third check only runs if you did the optional exercise. Without `evals/report_broken.json`, the last line is a `SKIP`, which is fine.
 
 ## What just happened
 - The agent now runs on AgentCore Runtime, behind the same Gateway, Cedar pack and interceptor.
 - Ten replay cases score every change: three deterministic scorers from the audit log and the answer, plus a DeepEval GEval judge on Bedrock.
 - `evals/gate.py` turns the scores into an exit code, so the same check can block a pull request in CI.
-- Removing two "harmless" prompt rules dropped RCA and trajectory below the bars, and the gate caught it.
+- If you did the optional exercise: removing two "harmless" prompt rules dropped RCA and trajectory below the bars, and the gate caught it.
 
 !!! question "Discuss"
     The guardrails stopped the injection even with the broken prompt, so why gate on quality at all? Which metric would

@@ -22,20 +22,25 @@ it can be searched semantically with `RetrieveMemoryRecords`.
 - an **episodic** strategy `oncall_episodes` on `/products/payments-gw/episodes/{sessionId}`. It is created, but the
   Lab A hook reads only the semantic records.
 
-**Seeding.** Memory can extract records from conversation events by itself, but that is asynchronous (60 s or more)
-and depends on an LLM. For a lab, deterministic beats clever: `scripts/seed_memory.py` writes each file in
-`data/incidents/` (26 past incidents) and `data/runbooks/` (8 runbooks) as one record with `BatchCreateMemoryRecords`,
-in batches of 10, then polls until they are listable (about 30 s in testing). It skips a namespace that is already
-seeded, so it is safe to re-run. Only one past incident, **INC-2026-031**, is a PSP timeout caused by a config change;
-the others are deliberately similar-looking distractors.
+!!! note "Other memory strategies (out of scope today)"
+    AgentCore Memory has more strategies than the two used here. The built-in ones are semantic, summary, user preference and
+    episodic. You can also customize a built-in strategy with your own extraction prompt and model, or use a **self-managed**
+    strategy, where you run your own extraction and consolidation and use Memory only for storage and retrieval. We use
+    semantic records here and don't cover the others in this workshop.
 
-**Retrieval before every model call.** `MemoryHook` (`agent/memory_hook.py`) subscribes to Strands'
-`BeforeModelCallEvent`. On the first call it searches with the task (the alert). On every later call it searches with
-the head of the last six messages (tool results and the model's own notes, up to 2000 characters), because the evidence
-describes the failure far better than the raw alert JSON. It queries both namespaces (top 8 each), keeps the best
-8 incidents and 3 runbooks seen so far, and appends them to the system prompt with an instruction to cite the
-`INC-`/`RB-` ids it relies on. The hook is only added when `MEMORY_ID` is configured, which is why earlier runs printed
-`(no memory configured)`.
+**Seeding**
+
+- Memory can extract records from conversations itself, but that is slow (60 s or more) and depends on an LLM.
+- So the lab seeds deterministically: `scripts/seed_memory.py` writes 26 past incidents (`data/incidents/`) and 8 runbooks (`data/runbooks/`) as records with `BatchCreateMemoryRecords`.
+- It takes about 30 s and is safe to re-run, because it skips a namespace that is already seeded.
+- Only one incident, **INC-2026-031**, is a PSP timeout from a config change. The rest are look-alike distractors.
+
+**Retrieval before every model call**
+
+- `MemoryHook` (`agent/memory_hook.py`) runs before each model call.
+- The first call searches with the alert. Later calls search with the recent tool results and notes, because the evidence describes the failure better than the raw alert.
+- It searches both namespaces, keeps the best 8 incidents and 3 runbooks, and adds them to the system prompt, asking the model to cite the `INC-`/`RB-` ids it uses.
+- The hook is only added when `MEMORY_ID` is set, which is why earlier runs printed `(no memory configured)`.
 
 ![Memory: seed once, retrieve before every model call](../diagrams/lab-a-memory.drawio)
 
@@ -50,17 +55,7 @@ make memory
     [labA] memory ACTIVE: dezerv_payments_oncall-<suffix> strategies={'payments_facts': '...', 'oncall_episodes': '...'}
     ```
 
-### 2. Start the Part 6 deploy now, in the background
-Deploying the agent to AgentCore Runtime takes a few minutes, so start it now and let it run while you finish this
-part. Open a **second terminal** in the repo root and run:
-```bash
-make deploy-agent
-```
-Start it only **after** `make memory` has finished: the deploy passes the memory id to the Runtime as an environment
-variable and stops with an error if there is none yet. The deploy makes no tool calls, so it does not compete with
-your `oncall` runs for the rate limit. You will check it at the start of Part 6.
-
-### 3. Seed the incidents and runbooks
+### 2. Seed the incidents and runbooks
 ```bash
 make seed-memory
 ```
@@ -73,7 +68,7 @@ make seed-memory
     memory seeded
     ```
 
-### 4. Rerun the incident
+### 3. Rerun the incident
 ```bash
 make run-incident
 ```
@@ -107,10 +102,8 @@ make verify-labA-part5
     after every run?
 
 !!! tip "Behind?"
-    `make solution-part5` brings you to the end of this part (it adds `memory` and `seed-memory`). It does not start the
-    deploy: run `make deploy-agent` yourself, or use `make solution-part6`.
+    `make solution-part5` brings you to the end of this part (it adds `memory` and `seed-memory`).
 
 ## Troubleshooting
 - **No INC-2026-031 in the answer:** retrieval and model variance. Rerun `make run-incident`, then `make verify-labA-part5`.
-- **`make deploy-agent` fails with a missing `MEMORY_ID`:** it started before `make memory` finished. Run it again.
 - **`timed out waiting for records`:** indexing is slow; run `make seed-memory` again (it skips what is already there).
