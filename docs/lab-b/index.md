@@ -103,7 +103,7 @@ It should end with `found gateway_id, policy_engine_id, memory_id, runtime_id`.
     keep them. See [Catch-up targets](../reference/catch-up.md).
 
 !!! danger "Ground rules"
-    Never set `autonomy` above `L1` and never turn `forbid_ops` off. The workshop schema refuses both, so don't try to
+    Never set `autonomy` above `L1` (`L0` only reads, `L1` also files tickets) and never turn `forbid_ops` off. The workshop schema refuses both, so don't try to
     work around it. Don't hand-edit anything under `agents/`. Change the manifest and re-render.
 
 ## Troubleshooting

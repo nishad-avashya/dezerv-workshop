@@ -52,7 +52,7 @@ Behind? `make solution-labB-part1` ... `part4` (these overwrite `labs/B/agent.ya
 
 ---
 ## Capstone: each squad builds an on-call agent for its own service (90 min)
-Discovery (10 min): ask the squad these questions, one at a time, using their service sheet (`capstone/service-sheet.md`) if they have one: the service and purpose; stack; top three failure modes; one sanitised past incident (symptom, timeline, root cause, fix); forbidden zones; SLOs; one field never to reveal. **Keep the scope to ONE failure mode and ONE custom tool.** If they try to model the whole service, narrow it.
+Discovery (10 min): ask the squad these questions, one at a time, using their service sheet (`capstone/service-sheet.md`) if they have one: the service and purpose; the main record the on-call looks up (its name and ID field, for example `kyc_requests` and `request_id`; do not ask about the tech stack, nothing is deployed from it); top three failure modes; one sanitised past incident (symptom, timeline, root cause, fix); forbidden zones; SLOs; one field never to reveal. Ask only these seven; skip other fields on the sheet (for example key dependencies). If they are unsure, offer a mock answer. The red herring comes from the profile. **Keep the scope to ONE failure mode and ONE custom tool.** If they try to model the whole service, narrow it.
 
 No sheet? Pick a ready profile: `kyc-svc`, `mandates-svc`, `ledger-recon`, `notifications-svc`, `nav-ingest`. A squad-defined service uses the same format: copy a profile from `capstone/profiles/`, edit it, and pass it with `SCHEMA=`.
 

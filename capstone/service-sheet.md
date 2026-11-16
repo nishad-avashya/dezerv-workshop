@@ -6,8 +6,8 @@
 |---|---|---|
 | Squad name | | `payouts` |
 | Service and one-line purpose | | `kyc-svc`: verifies PAN and Aadhaar through a third-party KYC provider |
-| Stack | | Go, MongoDB `kyc_requests`, CloudWatch `/ecs/kyc-*` |
-| Key dependencies | | KYC vendor API, notifications service |
+| Main record the on-call looks up (name and ID field) | | `kyc_requests`, ID `request_id` |
+| Another service whose logs look suspicious but isn't the cause | | `notifications-svc` |
 | Top 3 failure modes | 1. <br>2. <br>3. | Vendor timeouts; OTP delivery failures; stuck `PENDING` requests |
 | One past incident, sanitized | Symptom, timeline, root cause, fix | Retry-policy change raised vendor timeouts after a deploy |
 | Forbidden zones (things the agent must never touch) | | PII retention logic; `kyc_documents` writes |

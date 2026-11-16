@@ -13,7 +13,7 @@ Before the labs, you need three things: an editor connected to your workshop acc
 
 !!! danger "Never break these"
     1. **All data is synthetic.** Do not paste real customer data, credentials or source code into the account.
-    2. **Never weaken the guardrails.** Don't edit `policy/cedar/30-forbid-mutations.cedar`. Don't set `forbid_ops: false` or `autonomy` above `L1`. Don't detach the policy engine or the interceptor.
+    2. **Never weaken the guardrails.** Don't edit `policy/cedar/30-forbid-mutations.cedar`. Don't set `forbid_ops: false`. Don't detach the policy engine or the interceptor.
     3. **Never print secrets.** `.env` and `.labA.json` hold Cognito client secrets. Don't `cat` them, and don't commit them.
     4. **Agents recommend, they don't act.** No agent ever restarts, scales or rolls back anything.
     5. **Use `make` targets**, not hand-written AWS commands. They are idempotent and tested, and they refuse to run against the wrong account.
