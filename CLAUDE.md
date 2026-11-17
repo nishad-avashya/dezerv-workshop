@@ -75,7 +75,8 @@ Remind the squad to **download `exports/<s>-agent-skeleton.zip`** (the account e
 - The `kyc-svc` capstone profile shares its CloudWatch log group with Lab A's red-herring `kyc-svc` logs.
 
 ## If something fails
-- Read the exact error and the matching row in `FINDINGS.md` and `INSTRUCTOR.md` (section 9) first.
+- **Stuck? Read the docs in this repo.** `docs/reference/troubleshooting.md` first (search it for the exact error text), then the page for the part you are on: `docs/getting-started/`, `docs/lab-a/`, `docs/lab-b/`, `docs/capstone/`. They are markdown, so read them directly. Published copy: https://nishad-avashya.github.io/dezerv-workshop/
+- Then read the exact error and the matching row in `FINDINGS.md` and `INSTRUCTOR.md` (section 9).
 - Permission denied creating IAM roles, Cognito, Lambda, Gateway, policy engine, memory or runtime: the workshop role is more restrictive than expected. Stop, record the denied action, tell the instructor. Do not try to work around IAM.
 - `RATE_LIMITED`: wait a minute. Do not run two `oncall` workloads at once.
 - Wrong agent answer: check the verify target, then the audit log for the session, before touching the prompt.

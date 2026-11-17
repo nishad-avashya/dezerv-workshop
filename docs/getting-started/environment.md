@@ -101,6 +101,8 @@ Restart Claude Code if it was running. In Claude Code, `/status` should show `us
     ```
     A repo's own `.claude/settings.json`, or `claude --model`, can still override it.
 
+    Your role can call only some models. Sonnet 4.6 and Sonnet 4.5 work. Sonnet 5, Opus 5.5, Haiku 5.5 and Fable 5.2 are denied, so don't switch to them with `/model`.
+
 ## 5. Set up the IAM role
 
 `make bootstrap` needs `WSParticipantRole` to be able to pass the Lab A roles to Lambda and AgentCore. Grant that once, from a new terminal (it starts with the default `CodeEditorInstanceRole`):
@@ -117,10 +119,10 @@ Then switch to `WSParticipantRole`: open a new terminal, paste the credentials `
 aws sts get-caller-identity   # the Arn should contain WSParticipantRole
 ```
 
-!!! important "`WSParticipantRole` is the role for lab commands"
-    Every `make` command in the labs runs as `WSParticipantRole`. The credentials belong to the terminal, so **paste the `export` command again in every new terminal**. A new terminal starts as `CodeEditorInstanceRole`.
+!!! important "`WSParticipantRole` is the role for everything, including Claude Code"
+    Every `make` command in the labs and Claude Code run as `WSParticipantRole`. The credentials belong to the terminal, so **paste the `export` command again in every new terminal**. A new terminal starts as `CodeEditorInstanceRole`, which is only for the one-time grant above.
 
-    **Claude Code needs the opposite: a terminal on `CodeEditorInstanceRole`.** `WSParticipantRole` can't call the model. If Claude Code stops with an IAM error, see [Troubleshooting](../reference/troubleshooting.md#claude-code-fails-with-an-aws-authentication-error).
+    This role can call only some models. The ones set in step 4 work. Any other model fails with an IAM error. If Claude Code stops with one, see [Troubleshooting](../reference/troubleshooting.md#claude-code-fails-with-an-aws-authentication-error).
 
 ## 6. Point Claude Code at the labs
 

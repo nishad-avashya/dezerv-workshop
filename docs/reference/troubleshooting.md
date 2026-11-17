@@ -19,23 +19,21 @@ arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-5 because no
 policy allows the bedrock:InvokeModelWithResponseStream action"}
 ```
 
-**Cause:** Claude Code is running in a terminal that has the `WSParticipantRole` credentials pasted in. That role can run the labs but isn't allowed to call the Bedrock model. Claude Code works from a terminal on the default `CodeEditorInstanceRole`.
+**Cause:** Claude Code is trying to call a model that `WSParticipantRole` isn't allowed to use. The error names it (above, `anthropic.claude-sonnet-5`). This happens when the model isn't pinned, so Claude Code picks its newest default. Your role can call only some models: Sonnet 4.6 and Sonnet 4.5 work, and Sonnet 5, Opus 5.5, Haiku 5.5 and Fable 5.2 are denied.
 
 **Fix:**
 
 1. Exit Claude Code.
-2. Open a **new terminal**. It starts on `CodeEditorInstanceRole`. Do not paste the credentials.
-3. Check the role:
+2. Pin the model: run the command in [Pin the Claude Code model](../getting-started/environment.md#4-pin-the-claude-code-model).
+3. In a terminal with the `WSParticipantRole` credentials pasted, check the role:
 
     ```bash
-    aws sts get-caller-identity   # the Arn should contain CodeEditorInstanceRole
+    aws sts get-caller-identity   # the Arn should contain WSParticipantRole
     ```
 
-4. Start Claude Code again from `~/dezerv`.
+4. Start Claude Code again from `~/dezerv`, and run `/status` to check the model is `us.anthropic.claude-sonnet-4-6`.
 
-Keep a second terminal with the `WSParticipantRole` credentials pasted for the `make` commands.
-
-If the error still appears on `CodeEditorInstanceRole`, tell the instructor with the exact error text.
+If the error names `claude-sonnet-4-6` and still appears, tell the instructor with the exact error text.
 
 ## Cost breach error
 
