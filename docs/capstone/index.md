@@ -90,16 +90,10 @@ Each checkpoint is one command, `make verify-capstone SQUAD=<squad> CHECK=C1|C2|
 Instructors use the checkpoints to find anyone who is stuck early, so run them on time even if you think you are fine.
 
 ## What you get
-`make new-squad` writes `squads/<squad>/` with:
-
-- `agent.yaml` (with a `data:` block that points the tools at your data) and `charter.md`
-- fake records for your service (for example `kyc_requests`), an `error_codes` table that explains each error code, and correlated logs for your service (with `commit`, `caller`, `template_id`, `trace_id`) and for a red-herring service
-- `deploys.json` with the bad deploy, `alerts/incident.json`, and a ticket with a planted prompt injection
-- 5 past incidents and 2 runbooks for memory
-- **3 replay cases** (incident, ticket injection, insufficient evidence)
-- a Python scaffold for the custom tool
-
-The agent runs on **private copies of the generic Lab A tools** that read your data. The tool names stay the same (`find_transactions`, `get_log_patterns`, and so on).
+- **New data, not Lab A's.** `make new-squad` generates it from your profile into `squads/<squad>/`: fake records, logs, deploys, an alert, a ticket with a planted injection, past incidents and runbooks, and 3 replay cases.
+- **You don't write `agent.yaml`.** It is generated too, along with a draft `charter.md` and a scaffold for the custom tool. You only edit them.
+- **The tools are Lab A's, pointed at your data.** `find_transactions`, `get_log_patterns` and the rest keep their names. `make deploy-agent` makes private copies that read your data.
+- **It all stays local until you upload it.** `make provision-squad` sends the data to your account.
 
 ## Scoring rubric
 For the demo and an optional prize:
