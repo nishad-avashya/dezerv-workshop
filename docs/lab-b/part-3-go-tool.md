@@ -9,8 +9,11 @@
 
 ## Concepts
 
-Parts 1 and 2 used only the built-in connectors. Squads will have their own data, so here you add your own tool,
+Parts 1 and 2 used only the built-in connectors. Squads will have their own data, so here you add a custom tool
 written in Go, with **one line** in the manifest.
+
+You don't write the Go code from scratch. A ready-made Go tool is already in the repo at `tools/mandates-go`, and in
+this part you wire it into your new agent.
 
 `tools/mandates-go` is a Go Lambda with two tools:
 
@@ -62,7 +65,7 @@ agent never sees `revoke_mandate`. If something calls it anyway, Cedar denies th
 
 ### 1. Register the tool in the manifest
 
-The manifest is where you tell the factory which tools your agent has. Add the Go tool by replacing the line `custom: []` in `labs/B/agent.yaml` with:
+The manifest is where you tell the factory which tools your agent has. Wire in the existing Go tool by replacing the line `custom: []` in `labs/B/agent.yaml` with:
 
 ```yaml title="labs/B/agent.yaml (connectors section)"
   custom: [{ name: mandates, type: lambda, runtime: go, path: tools/mandates-go }]
