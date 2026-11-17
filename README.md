@@ -1,5 +1,7 @@
 # dezerv-agentcore-labs
 
+**Docs: https://nishad-avashya.github.io/dezerv-workshop/**
+
 Hands-on labs for the Dezerv *Diving Deep with Amazon Bedrock AgentCore* workshop (Avashya). **All data is synthetic.**
 
 | Lab | What | Status |
