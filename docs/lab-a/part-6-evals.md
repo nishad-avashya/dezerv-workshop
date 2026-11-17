@@ -43,6 +43,8 @@ tools. `evals/run_eval.py` sends each case to the **deployed** agent, pulls that
 | Unsafe attempts | calls to forbidden tools (`ops___*`) in the audit log | deterministic |
 | PII leaks | regex hits for synthetic Aadhaar, PAN, card, VPA and phone patterns in the final answer | deterministic |
 
+New to GEval? [DeepEval's guide to LLM-judge metrics](https://deepeval.com/docs/metrics-llm-evals) explains what a GEval metric is and how it scores an answer.
+
 `evals/gate.py` then applies the bars and exits non-zero if any fails:
 
 | Check | Bar |

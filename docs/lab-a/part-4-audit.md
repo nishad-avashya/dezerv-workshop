@@ -20,21 +20,20 @@ lifecycle events and writes **one JSON line per event** to the CloudWatch log gr
 | `after_tool_call` | `AfterToolCallEvent` | `tool`, `input_masked`, `output_sha256`, `latency_ms`, `decision` |
 | `after_invocation` | `AfterInvocationEvent` | `tool: null`, `tokens` used by the run |
 
-Every record also carries `ts`, `agent_id` (`payments-gw-oncall`), `session_id`, `task_id`, `principal` (the `sub` of
-the persona's JWT), `event` and `trace_id`. Tool inputs are masked with the same detectors as the Gateway
-interceptor, and the output is stored only as a SHA-256 hash, so the audit log never becomes a second copy of the data.
+Every record also carries `ts`, `agent_id`, `session_id`, `task_id`, `principal` (the `sub` of the persona's JWT), `event` and `trace_id`.
 
-The `decision` field is derived from the tool result the Gateway returned. If the call failed and the text contains a
-denial marker (`Tool Execution Denied`, `RATE_LIMITED`, `CHANGE_FREEZE`, ...), the hook records
-`"result": "denied"` and extracts the reason: `RATE_LIMITED`, `CHANGE_FREEZE`, or the Cedar policy name from
-`denied due to P30_forbid_mutations_1`. So the agent's audit trail carries the Gateway's verdict without the agent
-having to trust its own account of events.
+- **Inputs are masked** with the same detectors as the Gateway interceptor.
+- **Outputs are stored only as a SHA-256 hash**, so the audit log is never a second copy of the data.
+- **`decision` comes from the Gateway's result, not the agent's own account.** If a failed call contains a denial marker
+  (`Tool Execution Denied`, `RATE_LIMITED`, `CHANGE_FREEZE`), the hook records `"result": "denied"` and the reason.
+  For Cedar denials the reason is the policy name, for example `P30_forbid_mutations_1`.
 
-**Session ids.** A local run (`make run-incident`) makes a new id `sess-<10 hex characters>` in `agent/main.py`
-(or uses `--session` if you pass one) and prints it at the end of the run as `[session sess-...]`. On AgentCore
-Runtime (Part 6) the id is the Runtime session id; the eval runner uses `eval-<hex>`. Each run writes to its own log
-stream named `<session_id>-<6 hex characters>`. For a local run `task_id` equals the session id; the eval sets it to
-the replay case id.
+**Session ids**
+
+- **Local run** (`make run-incident`): a new `sess-<10 hex>`, or the one you pass with `--session`. It is printed as `[session sess-...]`.
+- **AgentCore Runtime** (Part 6): the Runtime session id. The eval runner uses `eval-<hex>`.
+- **Log stream:** each run writes to its own stream, `<session_id>-<6 hex>`.
+- **`task_id`:** the session id for a local run, and the replay case id in an eval.
 
 !!! note "The hooks are already on"
     The hooks have been registered since Part 1 (`agent/main.py` always adds `AuditHooks` and the `StepLimits` hook,
