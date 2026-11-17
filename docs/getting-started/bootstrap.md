@@ -20,7 +20,7 @@
 ### 1. Pin the account
 
 !!! warning "Be on `WSParticipantRole`, with the PassRole policy granted"
-    Bootstrap fails on `WSParticipantRole` until [the `PassLabARoles` policy is granted](environment.md#4-set-up-the-iam-role). Check with `aws sts get-caller-identity` that your `Arn` contains `WSParticipantRole`.
+    Bootstrap fails on `WSParticipantRole` until [the `PassLabARoles` policy is granted](environment.md#5-set-up-the-iam-role). Check with `aws sts get-caller-identity` that your `Arn` contains `WSParticipantRole`.
 
 Every script refuses to run if your credentials are for a different account. Export your account id from your credentials:
 
@@ -116,5 +116,3 @@ git clone https://github.com/nishad-avashya/dezerv-workshop.git ~/dezerv && cd ~
 export EXPECT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 make link-labA
 ```
-
-[Next: Lab A :octicons-arrow-right-24:](../lab-a/index.md){ .md-button .md-button--primary }

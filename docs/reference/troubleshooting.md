@@ -41,7 +41,7 @@ If the error still appears on `CodeEditorInstanceRole`, tell the instructor with
 
 When the account goes over its cost limit, commands and Claude Code start failing with IAM errors (`AccessDenied`, `not authorized to perform ...`), even though they worked before.
 
-**Fix:** do the [IAM setup from the environment steps](../getting-started/environment.md#4-set-up-the-iam-role) again:
+**Fix:** do the [IAM setup from the environment steps](../getting-started/environment.md#5-set-up-the-iam-role) again:
 
 1. In a new terminal on `CodeEditorInstanceRole` (no credentials pasted), run `make grant-passrole`.
 2. Open another new terminal, paste the `WSParticipantRole` credentials from the workspace home page, and check with `aws sts get-caller-identity`.
@@ -55,7 +55,7 @@ If it still fails, tell the instructor with the exact error text.
 | `bash: make: command not found` | The Workshop Studio editor has no `make` | `bash bootstrap.sh` |
 | `refusing: expected account X, credentials are for Y` | The `EXPECT_ACCOUNT` guard did its job | Check which account your credentials are for |
 | `make bootstrap` prints `FAILED <Resource> ... not authorized to perform: <action>` | The role lacks an action the stack needs | Record the action and tell the instructor. The failed stack is deleted automatically |
-| `make bootstrap` fails with `not authorized to perform: iam:PassRole` | `WSParticipantRole` can't pass the Lab A roles to Lambda and AgentCore until it is granted | In a **new terminal on `CodeEditorInstanceRole`** (no credentials pasted) run `make grant-passrole`. Then paste the `WSParticipantRole` credentials in another new terminal and re-run. See [Open your environment](../getting-started/environment.md#4-set-up-the-iam-role) |
+| `make bootstrap` fails with `not authorized to perform: iam:PassRole` | `WSParticipantRole` can't pass the Lab A roles to Lambda and AgentCore until it is granted | In a **new terminal on `CodeEditorInstanceRole`** (no credentials pasted) run `make grant-passrole`. Then paste the `WSParticipantRole` credentials in another new terminal and re-run. See [Open your environment](../getting-started/environment.md#5-set-up-the-iam-role) |
 | `make grant-passrole`: `you are already on WSParticipantRole` | The grant has to run as the default role, and this terminal has the `WSParticipantRole` credentials pasted | Open a **new terminal** (it starts on `CodeEditorInstanceRole`) and run it there |
 | `make grant-passrole`: `refusing: credentials are for account X but EXPECT_ACCOUNT=Y` | `EXPECT_ACCOUNT` is for a different account | Re-run `export EXPECT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)` in this terminal |
 | `AccessDenied` or `not authorized to perform` in a terminal you just opened, though it worked in another | A new terminal starts on `CodeEditorInstanceRole`. The `WSParticipantRole` credentials belong to the terminal you pasted them into | Paste the `export` command from the workspace home page again, then check with `aws sts get-caller-identity` |
